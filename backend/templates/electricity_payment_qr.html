@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Electricity Bill Payment{% endblock %}
+
+{% block content %}
+<style>
+    #qr-canvas {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        background: white;
+    }
+    .upi-link {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 10px;
+        margin: 10px 0;
+    }
+    #payment-status {
+        transition: all 0.3s ease;
+    }
+    .payment-success {
+        animation: fadeInUp 0.5s ease;
+    }
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h5><i class="fas fa-qrcode"></i> Scan QR Code to Pay</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <h6>Payment Details</h6>
+                        <table class="table table-borderless mx-auto" style="max-width: 400px;">
+                            <tr>
+                                <td><strong>Bill Month:</strong></td>
+                                <td>{{ calendar.month_name[bill.month] }} {{ bill.year }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Units Paying For:</strong></td>
+                                <td>{{ "%.2f"|format(units_paid) }}</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td><strong>Amount to Pay:</strong></td>
+                                <td><h5>₹{{ "%.2f"|format(amount_to_pay) }}</h5></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- QR Code Generation -->
+                    <div class="mb-4">
+                        <div id="qrcode" class="d-flex justify-content-center">
+                            <canvas id="qr-canvas" width="300" height="300"></canvas>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <div class="upi-link">
+                                <small class="text-muted">
+                                    <strong>UPI Payment Link:</strong><br>
+                                    <code style="font-size: 11px; word-break: break-all;">{{ upi_url }}</code>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Instructions:</strong><br>
+                        1. Open your UPI app (Google Pay, PhonePe, Paytm, etc.)<br>
+                        2. Scan the QR code above<br>
+                        3. Complete the payment in your UPI app<br>
+                        4. You'll be automatically redirected to dashboard after payment
+                    </div>
+
+                    <!-- Payment Status -->
+                    <div id="payment-status" class="alert alert-warning" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> 
+                        <strong>Checking payment status...</strong><br>
+                        Please wait while we verify your payment.
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <button id="manual-confirm" class="btn btn-success btn-lg">
+                                <i class="fas fa-check"></i> I've Completed Payment
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="simulate-payment" class="btn btn-warning btn-lg">
+                                <i class="fas fa-flash"></i> Simulate Payment (Test)
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('pay_electricity_bill', bill_id=bill.id) }}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Library -->
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate QR code
+    const upiUrl = '{{ upi_url|safe }}';
+    const canvas = document.getElementById('qr-canvas');
+    
+    console.log('UPI URL:', upiUrl);
+    console.log('Canvas element:', canvas);
+    
+    if (!upiUrl || upiUrl === '') {
+        document.getElementById('qrcode').innerHTML = '<div class="alert alert-danger">Error: No UPI URL provided</div>';
+        return;
+    }
+    
+    try {
+        // Generate QR code using QRious
+        const qr = new QRious({
+            element: canvas,
+            value: upiUrl,
+            size: 300,
+            foreground: '#000000',
+            background: '#ffffff'
+        });
+        
+        console.log('QR Code generated successfully with QRious');
+        
+        // Add pulse animation to QR code
+        canvas.classList.add('pulse');
+        
+    } catch (error) {
+        console.error('QR Code Error:', error);
+        document.getElementById('qrcode').innerHTML = '<div class="alert alert-danger">Error generating QR code: ' + error.message + '</div>';
+    }
+    
+    // Payment Status Checking
+    let paymentCheckInterval;
+    let paymentStartTime = Date.now();
+    const maxCheckTime = 5 * 60 * 1000; // 5 minutes
+    
+    function checkPaymentStatus() {
+        // Check if we've been checking for too long
+        if (Date.now() - paymentStartTime > maxCheckTime) {
+            clearInterval(paymentCheckInterval);
+            document.getElementById('payment-status').style.display = 'none';
+            return;
+        }
+        
+        fetch('/api/check_payment_status/{{ bill.id }}', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'completed') {
+                clearInterval(paymentCheckInterval);
+                document.getElementById('payment-status').innerHTML = 
+                    '<i class="fas fa-check-circle text-success"></i> <strong>Payment Successful!</strong><br>Redirecting to dashboard...';
+                document.getElementById('payment-status').className = 'alert alert-success';
+                
+                // Auto-redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/renter/dashboard';
+                }, 2000);
+            } else if (data.status === 'pending') {
+                // Payment is being processed
+                document.getElementById('payment-status').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking payment status:', error);
+        });
+    }
+    
+    // Start checking payment status when QR is scanned (simulate)
+    // In real implementation, this would start when user opens UPI app
+    function startPaymentMonitoring() {
+        document.getElementById('payment-status').style.display = 'block';
+        paymentCheckInterval = setInterval(checkPaymentStatus, 3000); // Check every 3 seconds
+    }
+    
+    // Auto-start monitoring after 10 seconds (assuming user scanned QR)
+    setTimeout(startPaymentMonitoring, 10000);
+    
+    // Manual confirm button
+    document.getElementById('manual-confirm').addEventListener('click', function() {
+        // Redirect to receipt upload page
+        window.location.href = '{{ url_for("upload_payment_receipt", bill_id=bill.id) }}';
+    });
+    
+    // Simulate payment button (for testing)
+    document.getElementById('simulate-payment').addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        fetch('/api/simulate_payment/{{ bill.id }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('payment-status').style.display = 'block';
+                document.getElementById('payment-status').innerHTML = 
+                    '<i class="fas fa-check-circle text-success"></i> <strong>Payment Successful!</strong><br>Redirecting to dashboard...';
+                document.getElementById('payment-status').className = 'alert alert-success';
+                
+                // Auto-redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/renter/dashboard';
+                }, 2000);
+            } else {
+                alert('Error: ' + data.message);
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-flash"></i> Simulate Payment (Test)';
+            }
+        })
+        .catch(error => {
+            console.error('Error simulating payment:', error);
+            alert('Error simulating payment');
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-flash"></i> Simulate Payment (Test)';
+        });
+    });
+    
+    // Focus detection (when user returns from UPI app)
+    let wasPageHidden = false;
+    
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            wasPageHidden = true;
+        } else if (wasPageHidden) {
+            // User returned to page, likely from UPI app
+            wasPageHidden = false;
+            startPaymentMonitoring();
+        }
+    });
+});
+</script>
+{% endblock %}

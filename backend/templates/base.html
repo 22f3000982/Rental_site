@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Rent & Electricity Billing{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-bg: #1f2937;
+            --light-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--light-bg);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, var(--primary-color));
+            transform: translateY(-1px);
+        }
+
+        .alert {
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar {
+            background: white;
+            min-height: calc(100vh - 76px);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar .nav-link {
+            color: var(--secondary-color);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 4px 0;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            color: white;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 12px;
+        }
+
+        .stats-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        .dark-mode {
+            background-color: var(--dark-bg);
+            color: white;
+        }
+
+        .dark-mode .card {
+            background-color: #374151;
+            color: white;
+        }
+
+        .dark-mode .sidebar {
+            background-color: #374151;
+        }
+
+        .dark-mode .table {
+            background-color: #374151;
+            color: white;
+        }
+
+        .dark-mode .table th {
+            background-color: #4b5563;
+        }
+
+        .payment-card {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .overdue-card {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                width: 250px;
+                z-index: 1000;
+                transition: left 0.3s ease;
+            }
+            
+            .sidebar.show {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-home me-2"></i>
+                Rent & Billing System
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('chat_dashboard') }}" id="chat-link">
+                                <i class="fas fa-comments me-1"></i>Chat
+                                <span id="chat-badge" class="badge bg-danger ms-1" style="display: none;">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>
+                                {{ current_user.username }}
+                                {% if current_user.is_admin %}
+                                    <span class="badge bg-warning ms-1">Admin</span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="toggleDarkMode()">
+                                    <i class="fas fa-moon me-2"></i>Dark Mode
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">
+                                <i class="fas fa-user-plus me-1"></i>Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            {% if current_user.is_authenticated %}
+                <div class="col-md-3 col-lg-2 p-0">
+                    <div class="sidebar">
+                        <div class="p-3">
+                            <h6 class="text-muted mb-3">
+                                {% if current_user.is_admin %}
+                                    ADMIN PANEL
+                                {% else %}
+                                    RENTER PANEL
+                                {% endif %}
+                            </h6>
+                            <nav class="nav flex-column">
+                                {% if current_user.is_admin %}
+                                    <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                    </a>
+                                    <a class="nav-link" href="{{ url_for('admin_renters') }}">
+                                        <i class="fas fa-users me-2"></i>Renters
+                                    </a>
+                                    <a class="nav-link" href="{{ url_for('add_meter_reading') }}">
+                                        <i class="fas fa-bolt me-2"></i>Add Reading
+                                    </a>
+                                    <a class="nav-link" href="{{ url_for('send_notification') }}">
+                                        <i class="fas fa-bell me-2"></i>Send Notification
+                                    </a>
+                                    <a class="nav-link" href="{{ url_for('chat_dashboard') }}">
+                                        <i class="fas fa-comments me-2"></i>Chat
+                                        <span id="admin-chat-badge" class="badge bg-danger ms-1" style="display: none;">0</span>
+                                    </a>
+                                    <a class="nav-link" href="{{ url_for('admin_settings') }}">
+                                        <i class="fas fa-cog me-2"></i>Settings
+                                    </a>
+                                {% else %}
+                                    <a class="nav-link" href="{{ url_for('renter_dashboard') }}">
+                                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                    </a>
+                                    <a class="nav-link" href="{{ url_for('renter_notifications') }}">
+                                        <i class="fas fa-bell me-2"></i>Notifications
+                                    </a>
+                                    <a class="nav-link" href="{{ url_for('chat_dashboard') }}">
+                                        <i class="fas fa-comments me-2"></i>Chat
+                                        <span id="renter-chat-badge" class="badge bg-danger ms-1" style="display: none;">0</span>
+                                    </a>
+                                {% endif %}
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9 col-lg-10">
+            {% else %}
+                <div class="col-12">
+            {% endif %}
+                    <div class="main-content p-4">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                if (alert.classList.contains('show')) {
+                    alert.classList.remove('show');
+                }
+            });
+        }, 5000);
+
+        // Check for unread chat messages
+        function updateChatBadge() {
+            fetch('/api/chat/unread_count')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('chat-badge');
+                    if (badge && data.unread_count > 0) {
+                        badge.textContent = data.unread_count;
+                        badge.style.display = 'inline-block';
+                    } else if (badge) {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error updating chat badge:', error));
+        }
+
+        // Update chat badge on page load and periodically
+        {% if current_user.is_authenticated %}
+        document.addEventListener('DOMContentLoaded', updateChatBadge);
+        setInterval(updateChatBadge, 30000); // Update every 30 seconds
+        {% endif %}
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

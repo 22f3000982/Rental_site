@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Payment Receipt{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h5><i class="fas fa-upload"></i> Upload Payment Receipt</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Payment Details</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Bill Month:</strong></td>
+                                <td>{{ calendar.month_name[bill.month] }} {{ bill.year }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Units Paid:</strong></td>
+                                <td>{{ "%.2f"|format(units_paid) }}</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td><strong>Amount Paid:</strong></td>
+                                <td><h5>₹{{ "%.2f"|format(amount_paid) }}</h5></td>
+                            </tr>
+                            <tr>
+                                <td><strong>UPI ID:</strong></td>
+                                <td>7677242570@ybl</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Instructions:</strong><br>
+                        1. Take a screenshot of your payment confirmation from your UPI app<br>
+                        2. Upload the screenshot below<br>
+                        3. Your payment will be verified by admin within 24 hours<br>
+                        4. You'll receive a notification once verified
+                    </div>
+
+                    <form method="POST" action="{{ url_for('upload_payment_receipt', bill_id=bill.id) }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="receipt" class="form-label">
+                                <i class="fas fa-image"></i> Payment Receipt/Screenshot *
+                            </label>
+                            <input type="file" class="form-control" id="receipt" name="receipt" 
+                                   accept="image/*" required>
+                            <div class="form-text">
+                                Accepted formats: JPG, PNG, GIF (Max size: 5MB)
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="transaction_id" class="form-label">
+                                <i class="fas fa-hashtag"></i> Transaction ID (Optional)
+                            </label>
+                            <input type="text" class="form-control" id="transaction_id" name="transaction_id" 
+                                   placeholder="Enter UPI Transaction ID if available">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="payment_notes" class="form-label">
+                                <i class="fas fa-sticky-note"></i> Additional Notes (Optional)
+                            </label>
+                            <textarea class="form-control" id="payment_notes" name="payment_notes" 
+                                      rows="3" placeholder="Any additional information about the payment"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('pay_electricity_bill', bill_id=bill.id) }}" 
+                               class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-upload"></i> Submit for Verification
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

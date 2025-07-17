@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Settings - Rent & Billing System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">
+                    <i class="fas fa-cog me-2"></i>
+                    System Settings
+                </h3>
+                
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.electricity_rate.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    {{ form.electricity_rate(class="form-control") }}
+                                    <span class="input-group-text">per unit</span>
+                                </div>
+                                {% if form.electricity_rate.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.electricity_rate.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.fixed_charge.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    {{ form.fixed_charge(class="form-control") }}
+                                </div>
+                                {% if form.fixed_charge.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.fixed_charge.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.rent_due_date.label(class="form-label") }}
+                                <div class="input-group">
+                                    {{ form.rent_due_date(class="form-control") }}
+                                    <span class="input-group-text">of every month</span>
+                                </div>
+                                {% if form.rent_due_date.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.rent_due_date.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-lg ms-2">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+                
+                <!-- Current Settings Display -->
+                <div class="mt-5">
+                    <h5>Current Settings</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-bolt fa-2x text-warning mb-2"></i>
+                                    <h6>Electricity Rate</h6>
+                                    <strong>₹{{ settings.electricity_rate }} per unit</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-tools fa-2x text-info mb-2"></i>
+                                    <h6>Fixed Charge</h6>
+                                    <strong>₹{{ settings.fixed_charge }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-calendar-alt fa-2x text-success mb-2"></i>
+                                    <h6>Rent Due Date</h6>
+                                    <strong>{{ settings.rent_due_date }} of every month</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

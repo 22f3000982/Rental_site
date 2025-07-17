@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Chat with {{ other_user.username }} - Rent & Billing System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-comment me-2"></i>
+        Chat with {{ other_user.username }}
+        {% if not current_user.is_admin %}
+            <small class="text-muted">(Admin)</small>
+        {% else %}
+            <small class="text-muted">(Room {{ other_user.room_number }})</small>
+        {% endif %}
+    </h2>
+    <div>
+        {% if current_user.is_admin %}
+            <a href="{{ url_for('chat_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Back to Dashboard
+            </a>
+        {% else %}
+            <a href="{{ url_for('renter_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Back to Dashboard
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-comments me-2"></i>
+                Conversation
+            </div>
+            <div class="card-body" style="height: 400px; overflow-y: auto;" id="chat-messages">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="message mb-3 {% if message.sender_id == current_user.id %}text-end{% endif %}">
+                        <div class="message-bubble 
+                             {% if message.sender_id == current_user.id %}bg-primary text-white ms-auto{% else %}bg-light{% endif %}"
+                             style="max-width: 70%; padding: 10px; border-radius: 15px; display: inline-block;">
+                            <div class="message-text">{{ message.message }}</div>
+                            <small class="message-time {% if message.sender_id == current_user.id %}text-white-50{% else %}text-muted{% endif %}">
+                                {{ message.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                {% if message.sender_id == current_user.id %}- You{% else %}- {{ message.sender.username }}{% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center text-muted mt-5">
+                    <i class="fas fa-comment-dots fa-2x mb-3"></i>
+                    <p>No messages yet. Start the conversation!</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <form method="POST" action="{{ url_for('send_chat_message', user_id=other_user.id) }}">
+                    {{ form.hidden_tag() }}
+                    <div class="input-group">
+                        {{ form.message(class="form-control", placeholder="Type your message...", rows="2") }}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Send
+                        </button>
+                    </div>
+                    {% if form.message.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.message.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.message-bubble {
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+#chat-messages {
+    background-color: #f8f9fa;
+}
+
+.message {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Scroll to bottom of chat
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Auto-resize textarea
+    const textarea = document.querySelector('textarea[name="message"]');
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+        
+        // Submit on Enter (but not Shift+Enter)
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.closest('form').submit();
+            }
+        });
+    }
+    
+    // Auto-refresh messages every 10 seconds
+    setInterval(function() {
+        // In a real application, you might want to use WebSockets or Server-Sent Events
+        // For now, we'll just indicate that messages might be outdated
+        console.log('Auto-refresh would happen here');
+    }, 10000);
+});
+</script>
+{% endblock %}

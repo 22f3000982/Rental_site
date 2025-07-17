@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}My Reading History{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-history"></i> My Reading History</h2>
+                <div>
+                    <a href="{{ url_for('download_reading_history') }}" class="btn btn-success me-2">
+                        <i class="fas fa-download"></i> Download PDF
+                    </a>
+                    <a href="{{ url_for('download_reading_history', format='excel') }}" class="btn btn-info me-2">
+                        <i class="fas fa-file-excel"></i> Download Excel
+                    </a>
+                    <a href="{{ url_for('renter_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-table"></i> Meter Reading History</h5>
+                    <small class="text-muted">All readings taken by admin at month end</small>
+                </div>
+                <div class="card-body">
+                    {% if readings %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Month/Year</th>
+                                    <th>Reading Date</th>
+                                    <th>Previous Reading</th>
+                                    <th>Current Reading</th>
+                                    <th>Units Consumed</th>
+                                    <th>Days</th>
+                                    <th>Daily Average</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reading in readings %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ calendar.month_name[reading.month] }} {{ reading.year }}</strong>
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-calendar"></i> 
+                                        {{ reading.reading_date.strftime('%d/%m/%Y') }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ "%.2f"|format(reading.previous_reading) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ "%.2f"|format(reading.current_reading) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ "%.2f"|format(reading.units_consumed) }}</span>
+                                    </td>
+                                    <td>
+                                        {% set days = (reading.reading_date - (readings[loop.index0 + 1].reading_date if loop.index0 + 1 < readings|length else reading.reading_date)).days %}
+                                        {{ days if days > 0 else 30 }}
+                                    </td>
+                                    <td>
+                                        {% set daily_avg = reading.units_consumed / (days if days > 0 else 30) %}
+                                        {{ "%.2f"|format(daily_avg) }} units/day
+                                    </td>
+                                    <td>
+                                        {% if reading.electricity_bills %}
+                                            {% if reading.electricity_bills[0].is_paid %}
+                                                <span class="badge bg-success">Paid</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">No Bill</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Summary Statistics -->
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Total Readings</h6>
+                                    <h4>{{ readings|length }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Total Units</h6>
+                                    <h4>{{ "%.2f"|format(readings|sum(attribute='units_consumed')) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Average Monthly</h6>
+                                    <h4>{{ "%.2f"|format((readings|sum(attribute='units_consumed')) / (readings|length if readings|length > 0 else 1)) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Latest Reading</h6>
+                                    <h4>{{ "%.2f"|format(readings[0].current_reading if readings else 0) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        No meter readings found. Admin will add readings at the end of each month.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

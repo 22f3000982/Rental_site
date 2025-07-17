@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Payment - Rent & Billing System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">
+                    <i class="fas fa-credit-card me-2"></i>
+                    Payment for {{ payment_type.title() }}
+                </h3>
+                
+                <!-- Payment Details -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title">Payment Details</h5>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Amount:</strong></td>
+                                        <td>₹{{ "%.2f"|format(payment.amount if payment_type == 'rent' else payment.total_amount) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Month:</strong></td>
+                                        <td>{{ payment.month }}/{{ payment.year }}</td>
+                                    </tr>
+                                    {% if payment_type == 'electricity' %}
+                                    <tr>
+                                        <td><strong>Units:</strong></td>
+                                        <td>{{ payment.units_consumed }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Rate:</strong></td>
+                                        <td>₹{{ payment.rate_per_unit }} per unit</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Fixed Charge:</strong></td>
+                                        <td>₹{{ payment.fixed_charge }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">QR Code Payment</h5>
+                                <div class="mb-3">
+                                    <img src="{{ url_for('serve_qr_code') }}" 
+                                         alt="QR Code" 
+                                         class="img-fluid" 
+                                         style="max-width: 200px;">
+                                </div>
+                                <small>Scan with any UPI app</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Confirmation -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="text-center">
+                            <form method="POST" action="{{ url_for('confirm_payment', payment_type=payment_type, payment_id=payment.id) }}">
+                                <input type="hidden" name="payment_method" value="upi">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-check me-2"></i>
+                                    Confirm Payment
+                                </button>
+                                <a href="{{ url_for('renter_dashboard') }}" class="btn btn-secondary btn-lg ms-2">
+                                    Cancel
+                                </a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

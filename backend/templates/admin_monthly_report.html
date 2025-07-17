@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Report - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-chart-line me-2"></i>
+        Monthly Report {{ current_year }}
+    </h2>
+    <div>
+        <a href="{{ url_for('auto_generate_bills') }}" class="btn btn-success me-2">
+            <i class="fas fa-magic me-1"></i>Auto Generate Bills
+        </a>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-home me-2"></i>Total Rent Collected
+                </h5>
+                <div class="stats-number">
+                    ₹{{ "%.0f"|format(rent_stats|sum(attribute='total_amount') or 0) }}
+                </div>
+                <small>This year</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card payment-card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-bolt me-2"></i>Total Electricity Collected
+                </h5>
+                <div class="stats-number">
+                    ₹{{ "%.0f"|format(electricity_stats|sum(attribute='total_amount') or 0) }}
+                </div>
+                <small>This year</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card overdue-card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Pending Rent
+                </h5>
+                <div class="stats-number">{{ pending_rent }}</div>
+                <small>Outstanding payments</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card overdue-card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Pending Electricity
+                </h5>
+                <div class="stats-number">{{ pending_electricity }}</div>
+                <small>Outstanding bills</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Breakdown -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-home me-2"></i>Monthly Rent Collection
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Payments</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month in range(1, 13) %}
+                            {% set month_data = rent_stats|selectattr('month', 'equalto', month)|first %}
+                            <tr>
+                                <td>{{ calendar.month_name[month] }}</td>
+                                <td>
+                                    {% if month_data %}
+                                        <span class="badge bg-success">{{ month_data.total_payments }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if month_data %}
+                                        ₹{{ "%.2f"|format(month_data.total_amount) }}
+                                    {% else %}
+                                        ₹0.00
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-bolt me-2"></i>Monthly Electricity Collection
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Bills</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month in range(1, 13) %}
+                            {% set month_data = electricity_stats|selectattr('month', 'equalto', month)|first %}
+                            <tr>
+                                <td>{{ calendar.month_name[month] }}</td>
+                                <td>
+                                    {% if month_data %}
+                                        <span class="badge bg-success">{{ month_data.total_bills }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if month_data %}
+                                        ₹{{ "%.2f"|format(month_data.total_amount) }}
+                                    {% else %}
+                                        ₹0.00
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-chart-bar me-2"></i>Year-wise Collection Trend
+                </h5>
+                <div class="chart-container">
+                    <canvas id="yearlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+// Yearly collection chart
+const ctx = document.getElementById('yearlyChart').getContext('2d');
+const yearlyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [{
+            label: 'Rent Collection (₹)',
+            data: [
+                {% for month in range(1, 13) %}
+                    {% set month_data = rent_stats|selectattr('month', 'equalto', month)|first %}
+                    {{ month_data.total_amount if month_data else 0 }},
+                {% endfor %}
+            ],
+            backgroundColor: 'rgba(54, 162, 235, 0.8)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }, {
+            label: 'Electricity Collection (₹)',
+            data: [
+                {% for month in range(1, 13) %}
+                    {% set month_data = electricity_stats|selectattr('month', 'equalto', month)|first %}
+                    {{ month_data.total_amount if month_data else 0 }},
+                {% endfor %}
+            ],
+            backgroundColor: 'rgba(255, 206, 86, 0.8)',
+            borderColor: 'rgba(255, 206, 86, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Amount (₹)'
+                }
+            }
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: 'Monthly Collection Comparison'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

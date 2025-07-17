@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Chat Dashboard - Rent & Billing System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-comments me-2"></i>
+        Chat Dashboard
+    </h2>
+    <div id="unread-badge" class="badge bg-danger" style="display: none;">
+        <span id="unread-count">0</span> unread
+    </div>
+</div>
+
+{% if conversations %}
+<div class="row">
+    {% for user_id, user_info in conversations.items() %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card chat-card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-user me-2"></i>
+                    {{ user_info.username }}
+                </h5>
+                <p class="card-text">
+                    <i class="fas fa-home me-1"></i>
+                    Room {{ user_info.room_number }}
+                </p>
+                <a href="{{ url_for('chat_conversation', user_id=user_id) }}" class="btn btn-primary">
+                    <i class="fas fa-comment me-1"></i>
+                    Open Chat
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center mt-5">
+    <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+    <h4 class="text-muted">No Conversations Yet</h4>
+    <p class="text-muted">Start chatting with renters by sending notifications with chat enabled.</p>
+    <a href="{{ url_for('send_notification') }}" class="btn btn-primary">
+        <i class="fas fa-bell me-1"></i>
+        Send Notification
+    </a>
+</div>
+{% endif %}
+
+<style>
+.chat-card {
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.chat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+// Check for unread messages periodically
+function checkUnreadMessages() {
+    fetch('/api/chat/unread_count')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('unread-badge');
+            const count = document.getElementById('unread-count');
+            
+            if (data.unread_count > 0) {
+                count.textContent = data.unread_count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Error checking unread messages:', error));
+}
+
+// Check immediately and then every 30 seconds
+checkUnreadMessages();
+setInterval(checkUnreadMessages, 30000);
+</script>
+{% endblock %}

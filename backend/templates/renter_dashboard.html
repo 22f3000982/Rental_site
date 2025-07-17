@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}Renter Dashboard - Rent & Billing System{% endblock %}
+
+{% block content %}
+<!-- Success Messages -->
+<div id="success-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'success' and 'payment' in message.lower() %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-tachometer-alt me-2"></i>
+        Welcome, {{ current_user.username }}!
+    </h2>
+    <span class="badge bg-primary">Room {{ current_user.room_number }}</span>
+</div>
+
+<!-- Current Month Summary -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card payment-card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-home me-2"></i>Current Rent
+                </h5>
+                <div class="stats-number">
+                    ₹{{ "%.2f"|format(rent_payment.amount if rent_payment else 0) }}
+                </div>
+                <small>
+                    {% if rent_payment %}
+                        {% if rent_payment.is_paid %}
+                            <i class="fas fa-check-circle"></i> Paid
+                        {% else %}
+                            <i class="fas fa-clock"></i> Due: {{ rent_payment.due_date.strftime('%d %b %Y') }}
+                        {% endif %}
+                    {% else %}
+                        <i class="fas fa-info-circle"></i> No rent assigned yet
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-bolt me-2"></i>Electricity Bill
+                </h5>
+                <div class="stats-number">
+                    ₹{{ "%.2f"|format(electricity_bill.total_amount if electricity_bill else 0) }}
+                </div>
+                <small>
+                    {% if electricity_bill %}
+                        {% if electricity_bill.is_paid %}
+                            <i class="fas fa-check-circle"></i> Paid
+                        {% else %}
+                            <i class="fas fa-clock"></i> {{ electricity_bill.units_consumed }} units
+                        {% endif %}
+                    {% else %}
+                        <i class="fas fa-info-circle"></i> No reading yet
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card {% if total_due > 0 %}overdue-card{% else %}payment-card{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-calculator me-2"></i>Total Due
+                </h5>
+                <div class="stats-number">
+                    ₹{{ "%.2f"|format(total_due) }}
+                </div>
+                <small>
+                    {% if total_due > 0 %}
+                        <i class="fas fa-exclamation-triangle"></i> Payment Required
+                    {% else %}
+                        <i class="fas fa-check-circle"></i> All Clear
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Actions -->
+{% if total_due > 0 %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">
+            <i class="fas fa-credit-card me-2"></i>Payment Actions
+        </h5>
+        <div class="row">
+            {% if rent_payment and not rent_payment.is_paid %}
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Rent Payment</span>
+                    <span class="fw-bold">₹{{ "%.2f"|format(rent_payment.amount) }}</span>
+                </div>
+                <a href="{{ url_for('pay_bill', payment_type='rent', payment_id=rent_payment.id) }}" 
+                   class="btn btn-success btn-sm">
+                    <i class="fas fa-credit-card me-1"></i>Pay Now
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if electricity_bill and not electricity_bill.is_paid %}
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Electricity Bill</span>
+                    <span class="fw-bold">₹{{ "%.2f"|format(electricity_bill.remaining_amount) }}</span>
+                </div>
+                <a href="{{ url_for('pay_electricity_bill', bill_id=electricity_bill.id) }}" 
+                   class="btn btn-warning btn-sm">
+                    <i class="fas fa-bolt me-1"></i>Pay Now
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Data Access & Reports -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">
+            <i class="fas fa-file-alt me-2"></i>Data & Reports
+        </h5>
+        <div class="row">
+            <div class="col-md-3">
+                <a href="{{ url_for('renter_reading_history') }}" class="btn btn-info btn-sm w-100 mb-2">
+                    <i class="fas fa-history me-1"></i>Reading History
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('renter_payment_receipts') }}" class="btn btn-success btn-sm w-100 mb-2">
+                    <i class="fas fa-receipt me-1"></i>Payment Receipts
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('download_payment_receipts') }}" class="btn btn-warning btn-sm w-100 mb-2">
+                    <i class="fas fa-download me-1"></i>Download All Receipts
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('download_payment_data') }}" class="btn btn-secondary btn-sm w-100 mb-2">
+                    <i class="fas fa-file-excel me-1"></i>Export All Data
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications -->
+{% if notifications %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">
+            <i class="fas fa-bell me-2"></i>Recent Notifications
+        </h5>
+        {% for notification in notifications %}
+        <div class="alert alert-info alert-dismissible fade show">
+            <strong>{{ notification.notification_type.title() }}:</strong> {{ notification.message }}
+            <small class="d-block mt-1">{{ notification.created_at.strftime('%d %b %Y at %I:%M %p') }}</small>
+        </div>
+        {% endfor %}
+        <a href="{{ url_for('renter_notifications') }}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-eye me-1"></i>View All
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Payment History -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-history me-2"></i>Rent Payment History
+                </h5>
+                {% if rent_payments %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in rent_payments[:5] %}
+                            <tr>
+                                <td>{{ payment.month }}/{{ payment.year }}</td>
+                                <td>₹{{ "%.2f"|format(payment.amount) }}</td>
+                                <td>
+                                    {% if payment.is_paid %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No payment history yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-bolt me-2"></i>Electricity Bill History
+                </h5>
+                {% if electricity_bills %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Units</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bill in electricity_bills[:5] %}
+                            <tr>
+                                <td>{{ bill.month }}/{{ bill.year }}</td>
+                                <td>{{ bill.units_consumed }}</td>
+                                <td>₹{{ "%.2f"|format(bill.total_amount) }}</td>
+                                <td>
+                                    {% if bill.is_paid %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% elif bill.units_paid and bill.units_paid > 0 %}
+                                        <span class="badge bg-info">Partial</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{{ url_for('renter_electricity_bills') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-eye me-1"></i>View All Bills
+                </a>
+                {% else %}
+                <p class="text-muted">No electricity bills yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Electricity Usage Chart -->
+{% if electricity_bills %}
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title">
+            <i class="fas fa-chart-line me-2"></i>Electricity Usage Trend
+        </h5>
+        <div class="chart-container">
+            <canvas id="usageChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    // Electricity usage chart
+    const ctx = document.getElementById('usageChart').getContext('2d');
+    const usageChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [
+                {% for bill in electricity_bills|reverse %}
+                    '{{ bill.month }}/{{ bill.year }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Units Consumed',
+                data: [
+                    {% for bill in electricity_bills|reverse %}
+                        {{ bill.units_consumed }},
+                    {% endfor %}
+                ],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Amount (₹)',
+                data: [
+                    {% for bill in electricity_bills|reverse %}
+                        {{ bill.total_amount }},
+                    {% endfor %}
+                ],
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Units'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Amount (₹)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Monthly Electricity Usage & Cost'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endif %}
+{% endblock %}

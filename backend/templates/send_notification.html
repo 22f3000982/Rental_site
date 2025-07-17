@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Send Notification - Rent & Billing System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">
+                    <i class="fas fa-bell me-2"></i>
+                    Send Notification
+                </h3>
+                
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.recipient_type.label(class="form-label") }}
+                        {{ form.recipient_type(class="form-select", id="recipient_type") }}
+                        {% if form.recipient_type.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.recipient_type.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3" id="recipient_select" style="display: none;">
+                        {{ form.recipient_id.label(class="form-label") }}
+                        {{ form.recipient_id(class="form-select") }}
+                        {% if form.recipient_id.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.recipient_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notification_type.label(class="form-label") }}
+                        {{ form.notification_type(class="form-select") }}
+                        {% if form.notification_type.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.notification_type.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.message.label(class="form-label") }}
+                        {{ form.message(class="form-control", rows="5") }}
+                        {% if form.message.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.message.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                {{ form.send_email(class="form-check-input") }}
+                                {{ form.send_email.label(class="form-check-label") }}
+                            </div>
+                            <small class="form-text text-muted">Send notification via email to recipient's registered email address.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                {{ form.enable_chat(class="form-check-input") }}
+                                {{ form.enable_chat.label(class="form-check-label") }}
+                            </div>
+                            <small class="form-text text-muted">Allow recipients to respond via chat system.</small>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-lg ms-2">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+                
+                <!-- Notification Templates -->
+                <div class="mt-5">
+                    <h5>Quick Templates</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Rent Reminder</h6>
+                                    <p class="small">Your rent payment is due on [date]. Please pay on time to avoid late fees.</p>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="useTemplate('reminder', 'Your rent payment is due on [date]. Please pay on time to avoid late fees.')">
+                                        Use Template
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Maintenance Notice</h6>
+                                    <p class="small">Scheduled maintenance on [date] from [time]. Please be prepared.</p>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="useTemplate('maintenance', 'Scheduled maintenance on [date] from [time]. Please be prepared.')">
+                                        Use Template
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>General Announcement</h6>
+                                    <p class="small">Important announcement regarding [topic]. Please read carefully.</p>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="useTemplate('announcement', 'Important announcement regarding [topic]. Please read carefully.')">
+                                        Use Template
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const recipientType = document.getElementById('recipient_type');
+    const recipientSelect = document.getElementById('recipient_select');
+    
+    function toggleRecipientSelect() {
+        if (recipientType.value === 'individual') {
+            recipientSelect.style.display = 'block';
+        } else {
+            recipientSelect.style.display = 'none';
+        }
+    }
+    
+    recipientType.addEventListener('change', toggleRecipientSelect);
+    toggleRecipientSelect(); // Initial call
+});
+
+function useTemplate(type, message) {
+    document.getElementById('notification_type').value = type;
+    document.getElementById('message').value = message;
+}
+</script>
+{% endblock %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Maintenance Alert</h6>
+                                    <p class="small">Scheduled maintenance will be conducted on [date] from [time]. Please cooperate.</p>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="useTemplate('alert', 'Scheduled maintenance will be conducted on [date] from [time]. Please cooperate.')">
+                                        Use Template
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>General Announcement</h6>
+                                    <p class="small">We are pleased to announce [announcement]. Thank you for your attention.</p>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="useTemplate('announcement', 'We are pleased to announce [announcement]. Thank you for your attention.')">
+                                        Use Template
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function useTemplate(type, message) {
+        document.getElementById('notification_type').value = type;
+        document.getElementById('message').value = message;
+    }
+</script>
+{% endblock %}

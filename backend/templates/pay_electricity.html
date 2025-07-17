@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Pay Electricity Bill{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-bolt"></i> Pay Electricity Bill - {{ calendar.month_name[bill.month] }} {{ bill.year }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Bill Details</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Month/Year:</strong></td>
+                                    <td>{{ calendar.month_name[bill.month] }} {{ bill.year }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Units Consumed:</strong></td>
+                                    <td>{{ "%.2f"|format(bill.units_consumed) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rate per Unit:</strong></td>
+                                    <td>₹{{ "%.2f"|format(bill.rate_per_unit) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Amount:</strong></td>
+                                    <td>₹{{ "%.2f"|format(bill.total_amount) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Units Already Paid:</strong></td>
+                                    <td>{{ "%.2f"|format(bill.units_paid or 0) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Amount Already Paid:</strong></td>
+                                    <td>₹{{ "%.2f"|format(bill.amount_paid or 0) }}</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td><strong>Remaining Units:</strong></td>
+                                    <td>{{ "%.2f"|format(bill.remaining_units) }}</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td><strong>Remaining Amount:</strong></td>
+                                    <td>₹{{ "%.2f"|format(bill.remaining_amount) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Payment Options</h6>
+                            
+                            <!-- Full Payment -->
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Full Payment</h6>
+                                    <p class="card-text">Pay the remaining amount: ₹{{ "%.2f"|format(bill.remaining_amount) }}</p>
+                                    <form method="POST" action="{{ url_for('process_electricity_payment', bill_id=bill.id) }}">
+                                        <input type="hidden" name="payment_type" value="full">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-credit-card"></i> Pay Full Amount
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Partial Payment -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Partial Payment</h6>
+                                    <p class="card-text">Pay for specific number of units</p>
+                                    <form method="POST" action="{{ url_for('process_electricity_payment', bill_id=bill.id) }}">
+                                        <input type="hidden" name="payment_type" value="partial">
+                                        <div class="mb-3">
+                                            <label for="units_to_pay" class="form-label">Units to Pay (Max: 1000, Available: {{ "%.2f"|format(bill.remaining_units) }})</label>
+                                            <input type="number" class="form-control" id="units_to_pay" name="units_to_pay" 
+                                                   min="1" max="1000" step="1" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Amount to Pay:</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="text" class="form-control" id="amount_display" readonly>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-credit-card"></i> Pay Partial Amount
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('renter_electricity_bills') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Bills
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const unitsInput = document.getElementById('units_to_pay');
+    const amountDisplay = document.getElementById('amount_display');
+    const ratePerUnit = {{ rate_per_unit }};
+    const maxUnits = Math.min(1000, {{ bill.remaining_units }});
+    
+    // Set the max attribute dynamically
+    unitsInput.max = maxUnits;
+    
+    function updateAmount() {
+        let units = parseFloat(unitsInput.value) || 0;
+        
+        // Enforce max limit
+        if (units > maxUnits) {
+            units = maxUnits;
+            unitsInput.value = maxUnits;
+        }
+        
+        const amount = units * ratePerUnit;
+        amountDisplay.value = amount.toFixed(2);
+    }
+    
+    unitsInput.addEventListener('input', updateAmount);
+    updateAmount();
+});
+</script>
+{% endblock %}

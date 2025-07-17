@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Add Meter Reading - Rent & Billing System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">
+                    <i class="fas fa-bolt me-2"></i>
+                    Add Meter Reading
+                </h3>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Best Practice:</strong> Take readings on the 31st of every month for consistent billing cycles.
+                </div>
+                
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.renter_id.label(class="form-label") }}
+                                {{ form.renter_id(class="form-select") }}
+                                {% if form.renter_id.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.renter_id.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.current_reading.label(class="form-label") }}
+                                {{ form.current_reading(class="form-control", placeholder="Enter current meter reading") }}
+                                {% if form.current_reading.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.current_reading.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.month.label(class="form-label") }}
+                                {{ form.month(class="form-select") }}
+                                {% if form.month.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.month.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.year.label(class="form-label") }}
+                                {{ form.year(class="form-control") }}
+                                {% if form.year.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.year.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">Previous Reading</label>
+                                <input type="text" class="form-control" id="previous_reading" 
+                                       placeholder="Previous reading will appear here" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">Estimated Units</label>
+                                <input type="text" class="form-control" id="estimated_units" 
+                                       placeholder="Estimated units will appear here" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-lg ms-2">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const monthField = document.getElementById('month');
+    const yearField = document.getElementById('year');
+    const renterField = document.getElementById('renter_id');
+    const currentReadingField = document.getElementById('current_reading');
+    const previousReadingField = document.getElementById('previous_reading');
+    const estimatedUnitsField = document.getElementById('estimated_units');
+    
+    // Set current month and year by default
+    if (!monthField.value) {
+        monthField.value = new Date().getMonth() + 1;
+    }
+    
+    if (!yearField.value) {
+        yearField.value = new Date().getFullYear();
+    }
+    
+    // Function to fetch previous reading
+    function fetchPreviousReading() {
+        const renterId = renterField.value;
+        if (renterId) {
+            fetch(`/admin/get_previous_reading/${renterId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.previous_reading !== null) {
+                        previousReadingField.value = data.previous_reading;
+                    } else {
+                        previousReadingField.value = 'No previous reading';
+                    }
+                    calculateEstimatedUnits();
+                })
+                .catch(error => {
+                    console.error('Error fetching previous reading:', error);
+                    previousReadingField.value = 'Error loading';
+                });
+        }
+    }
+    
+    // Function to calculate estimated units
+    function calculateEstimatedUnits() {
+        const currentReading = parseFloat(currentReadingField.value);
+        const previousReading = parseFloat(previousReadingField.value);
+        
+        if (!isNaN(currentReading) && !isNaN(previousReading)) {
+            const units = currentReading - previousReading;
+            estimatedUnitsField.value = units >= 0 ? units + ' units' : 'Invalid reading';
+        } else {
+            estimatedUnitsField.value = '';
+        }
+    }
+    
+    // Event listeners
+    renterField.addEventListener('change', fetchPreviousReading);
+    currentReadingField.addEventListener('input', calculateEstimatedUnits);
+    
+    // Initial fetch if renter is already selected
+    if (renterField.value) {
+        fetchPreviousReading();
+    }
+});
+</script>
+{% endblock %}
