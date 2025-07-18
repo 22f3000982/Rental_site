@@ -28,7 +28,7 @@
 </div>
 
 <!-- Current Month Summary -->
-<div class="row mb-4">
+<div class="row mb-4 g-3">
     <div class="col-md-4">
         <div class="card payment-card">
             <div class="card-body">
@@ -42,6 +42,10 @@
                     {% if rent_payment %}
                         {% if rent_payment.is_paid %}
                             <i class="fas fa-check-circle"></i> Paid
+                        {% elif rent_payment.payment_status == 'pending' %}
+                            <i class="fas fa-hourglass-half"></i> Payment Pending Approval
+                        {% elif rent_payment.payment_status == 'rejected' %}
+                            <i class="fas fa-times-circle"></i> Payment Rejected
                         {% else %}
                             <i class="fas fa-clock"></i> Due: {{ rent_payment.due_date.strftime('%d %b %Y') }}
                         {% endif %}
@@ -106,16 +110,34 @@
             <i class="fas fa-credit-card me-2"></i>Payment Actions
         </h5>
         <div class="row">
-            {% if rent_payment and not rent_payment.is_paid %}
+            {% if rent_payment and not rent_payment.is_paid and rent_payment.payment_status != 'pending' %}
             <div class="col-md-6">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span>Rent Payment</span>
                     <span class="fw-bold">₹{{ "%.2f"|format(rent_payment.amount) }}</span>
                 </div>
+                {% if rent_payment.payment_status == 'rejected' %}
+                    <p class="small text-danger mb-2">
+                        <i class="fas fa-exclamation-triangle"></i> Previous payment was rejected. Please try again.
+                    </p>
+                {% endif %}
                 <a href="{{ url_for('pay_bill', payment_type='rent', payment_id=rent_payment.id) }}" 
                    class="btn btn-success btn-sm">
                     <i class="fas fa-credit-card me-1"></i>Pay Now
                 </a>
+            </div>
+            {% elif rent_payment and rent_payment.payment_status == 'pending' %}
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Rent Payment</span>
+                    <span class="fw-bold">₹{{ "%.2f"|format(rent_payment.amount) }}</span>
+                </div>
+                <p class="small text-info mb-2">
+                    <i class="fas fa-hourglass-half"></i> Payment submitted and waiting for admin approval.
+                </p>
+                <button class="btn btn-secondary btn-sm" disabled>
+                    <i class="fas fa-clock me-1"></i>Pending Approval
+                </button>
             </div>
             {% endif %}
             
@@ -142,23 +164,28 @@
         <h5 class="card-title">
             <i class="fas fa-file-alt me-2"></i>Data & Reports
         </h5>
-        <div class="row">
-            <div class="col-md-3">
+        <div class="row g-2">
+            <div class="col-md-2 col-sm-6">
                 <a href="{{ url_for('renter_reading_history') }}" class="btn btn-info btn-sm w-100 mb-2">
                     <i class="fas fa-history me-1"></i>Reading History
                 </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2 col-sm-6">
                 <a href="{{ url_for('renter_payment_receipts') }}" class="btn btn-success btn-sm w-100 mb-2">
                     <i class="fas fa-receipt me-1"></i>Payment Receipts
                 </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2 col-sm-6">
+                <a href="{{ url_for('renter_payment_history_table') }}" class="btn btn-primary btn-sm w-100 mb-2">
+                    <i class="fas fa-table me-1"></i>Payment History Table
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
                 <a href="{{ url_for('download_payment_receipts') }}" class="btn btn-warning btn-sm w-100 mb-2">
                     <i class="fas fa-download me-1"></i>Download All Receipts
                 </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 col-sm-6">
                 <a href="{{ url_for('download_payment_data') }}" class="btn btn-secondary btn-sm w-100 mb-2">
                     <i class="fas fa-file-excel me-1"></i>Export All Data
                 </a>
@@ -203,6 +230,7 @@
                                 <th>Month</th>
                                 <th>Amount</th>
                                 <th>Status</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -213,8 +241,24 @@
                                 <td>
                                     {% if payment.is_paid %}
                                         <span class="badge bg-success">Paid</span>
+                                    {% elif payment.payment_status == 'pending' %}
+                                        <span class="badge bg-info">Pending Approval</span>
+                                    {% elif payment.payment_status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
                                     {% else %}
-                                        <span class="badge bg-warning">Pending</span>
+                                        <span class="badge bg-warning">Unpaid</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not payment.is_paid and payment.payment_status != 'pending' %}
+                                        <a href="{{ url_for('pay_bill', payment_type='rent', payment_id=payment.id) }}" 
+                                           class="btn btn-success btn-sm">
+                                            <i class="fas fa-credit-card me-1"></i>Pay Now
+                                        </a>
+                                    {% elif payment.payment_status == 'pending' %}
+                                        <small class="text-muted">Awaiting approval</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -244,6 +288,7 @@
                                 <th>Units</th>
                                 <th>Amount</th>
                                 <th>Status</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -261,12 +306,22 @@
                                         <span class="badge bg-warning">Pending</span>
                                     {% endif %}
                                 </td>
+                                <td>
+                                    {% if not bill.is_paid %}
+                                        <a href="{{ url_for('pay_bill', payment_type='electricity', payment_id=bill.id) }}" 
+                                           class="btn btn-success btn-sm">
+                                            <i class="fas fa-credit-card me-1"></i>Pay
+                                        </a>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <a href="{{ url_for('renter_electricity_bills') }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ url_for('renter_payment_receipts', payment_type='electricity') }}" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-eye me-1"></i>View All Bills
                 </a>
                 {% else %}

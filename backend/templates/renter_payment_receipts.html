@@ -115,7 +115,7 @@
                                         <strong>{{ calendar.month_name[payment.month] }} {{ payment.year }}</strong>
                                     </td>
                                     <td>
-                                        <span class="badge bg-success">₹{{ "%.2f"|format(payment.amount_paid if payment.amount_paid else payment.amount) }}</span>
+                                        <span class="badge bg-success">₹{{ "%.2f"|format(payment.amount_paid if payment.amount_paid else (payment.total_amount if payment.__class__.__name__ == 'ElectricityBill' else payment.amount)) }}</span>
                                     </td>
                                     <td>
                                         {% if payment.__class__.__name__ == 'ElectricityBill' %}

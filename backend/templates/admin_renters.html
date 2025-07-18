@@ -46,7 +46,13 @@
                             <span class="badge bg-warning">{{ renter.room_number }}</span>
                         </td>
                         <td>{{ renter.phone }}</td>
-                        <td>{{ renter.date_created.strftime('%d %b %Y') }}</td>
+                        <td>
+                            {% if renter.created_at %}
+                                {{ renter.created_at.strftime('%d %b %Y') }}
+                            {% else %}
+                                Not available
+                            {% endif %}
+                        </td>
                         <td>
                             <a href="{{ url_for('approve_renter', renter_id=renter.id) }}" 
                                class="btn btn-success btn-sm me-2">
@@ -118,8 +124,8 @@
                             <div class="btn-group" role="group">
                                 <a href="{{ url_for('view_renter', renter_id=renter.id) }}" 
                                    class="btn btn-sm btn-outline-primary" 
-                                   title="View Details">
-                                    <i class="fas fa-eye"></i>
+                                   title="View Profile & Documents">
+                                    <i class="fas fa-user"></i>
                                 </a>
                                 <a href="{{ url_for('edit_renter', renter_id=renter.id) }}" 
                                    class="btn btn-sm btn-outline-warning" 

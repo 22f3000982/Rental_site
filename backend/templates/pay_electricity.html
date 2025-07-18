@@ -5,13 +5,13 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        <div class="col-md-8 mx-auto">
+        <div class="col-md-8 col-sm-10 col-11 mx-auto">
             <div class="card">
                 <div class="card-header">
                     <h5><i class="fas fa-bolt"></i> Pay Electricity Bill - {{ calendar.month_name[bill.month] }} {{ bill.year }}</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-md-6">
                             <h6>Bill Details</h6>
                             <table class="table table-borderless">
@@ -95,7 +95,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ url_for('renter_electricity_bills') }}" class="btn btn-secondary">
+                    <a href="{{ url_for('renter_payment_receipts', payment_type='electricity') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Back to Bills
                     </a>
                 </div>

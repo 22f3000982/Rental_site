@@ -1,0 +1,480 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.full_name or user.username }} - Profile Details{% endblock %}
+
+{% block head %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .profile-avatar-large {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .profile-avatar-placeholder-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 2.5rem;
+        border: 4px solid white;
+    }
+    
+    .info-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background: white;
+    }
+    
+    .document-thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+    }
+    
+    .document-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #dee2e6;
+    }
+    
+    .progress-ring {
+        width: 60px;
+        height: 60px;
+        position: relative;
+    }
+    
+    .progress-ring svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+    
+    .progress-ring circle {
+        fill: transparent;
+        stroke-width: 4;
+        stroke-linecap: round;
+    }
+    
+    .verification-timeline {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .timeline-item {
+        border-left: 3px solid #e9ecef;
+        padding-left: 1rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #6c757d;
+    }
+    
+    .timeline-item.approved::before {
+        background: #28a745;
+    }
+    
+    .timeline-item.rejected::before {
+        background: #dc3545;
+    }
+    
+    .timeline-item.pending::before {
+        background: #ffc107;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-header {
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .profile-avatar-large,
+        .profile-avatar-placeholder-large {
+            width: 100px;
+            height: 100px;
+            font-size: 2rem;
+            margin: 0 auto 1rem;
+        }
+        
+        .info-card {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .document-thumbnail,
+        .document-placeholder {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .row > .col-lg-8,
+        .row > .col-lg-4 {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_profiles') }}">Profiles</a></li>
+            <li class="breadcrumb-item active">{{ user.full_name or user.username }}</li>
+        </ol>
+    </nav>
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                {% if user.profile and user.profile.profile_picture %}
+                    <img src="{{ url_for('serve_uploaded_file', filename=user.profile.profile_picture) }}" 
+                         class="profile-avatar-large" alt="Profile Picture">
+                {% else %}
+                    <div class="profile-avatar-placeholder-large mx-auto">
+                        {{ (user.full_name or user.username)[0].upper() }}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <h2 class="mb-2">{{ user.full_name or user.username }}</h2>
+                <p class="mb-1"><i class="fas fa-envelope me-2"></i>{{ user.email }}</p>
+                {% if user.phone %}
+                    <p class="mb-1"><i class="fas fa-phone me-2"></i>{{ user.phone }}</p>
+                {% endif %}
+                <p class="mb-0"><i class="fas fa-calendar me-2"></i>Joined {{ user.created_at.strftime('%B %d, %Y') }}</p>
+                {% if user.last_login %}
+                    <p class="mb-0 opacity-75"><i class="fas fa-clock me-2"></i>Last login {{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                {% endif %}
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="progress-ring">
+                    <svg>
+                        <circle cx="30" cy="30" r="26" stroke="#ffffff40" stroke-width="4"></circle>
+                        <circle cx="30" cy="30" r="26" stroke="#ffffff" stroke-width="4" 
+                                stroke-dasharray="163.36" 
+                                stroke-dashoffset="{{ 163.36 - (163.36 * (user.profile_completion_percentage or 0) / 100) }}"></circle>
+                    </svg>
+                    <div class="position-absolute top-50 start-50 translate-middle">
+                        <strong>{{ user.profile_completion_percentage or 0 }}%</strong>
+                    </div>
+                </div>
+                <p class="mt-2 mb-0">Profile Complete</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Profile Information -->
+        <div class="col-lg-8">
+            <!-- Personal Information -->
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-user me-2"></i>Personal Information</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Full Name:</strong><br>
+                        <span class="text-muted">{{ user.profile.full_name if user.profile else 'Not provided' }}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Date of Birth:</strong><br>
+                        <span class="text-muted">{{ user.profile.date_of_birth.strftime('%B %d, %Y') if user.profile and user.profile.date_of_birth else 'Not provided' }}</span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Gender:</strong><br>
+                        <span class="text-muted">{{ user.profile.gender.title() if user.profile and user.profile.gender else 'Not provided' }}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Marital Status:</strong><br>
+                        <span class="text-muted">{{ user.profile.marital_status.replace('_', ' ').title() if user.profile and user.profile.marital_status else 'Not provided' }}</span>
+                    </div>
+                </div>
+                {% if user.profile and user.profile.bio %}
+                <hr>
+                <div>
+                    <strong>Bio:</strong><br>
+                    <span class="text-muted">{{ user.profile.bio }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Contact Information -->
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-address-book me-2"></i>Contact Information</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Email:</strong><br>
+                        <span class="text-muted">{{ user.email }}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Phone:</strong><br>
+                        <span class="text-muted">{{ user.profile.phone if user.profile and user.profile.phone else 'Not provided' }}</span>
+                    </div>
+                </div>
+                {% if user.profile and (user.profile.address or user.profile.city or user.profile.state or user.profile.postal_code) %}
+                <hr>
+                <div>
+                    <strong>Address:</strong><br>
+                    <span class="text-muted">
+                        {% if user.profile.address %}{{ user.profile.address }}<br>{% endif %}
+                        {% if user.profile.city %}{{ user.profile.city }}{% endif %}{% if user.profile.state %}, {{ user.profile.state }}{% endif %}{% if user.profile.postal_code %} {{ user.profile.postal_code }}{% endif %}{% if user.profile.country %}<br>{{ user.profile.country }}{% endif %}
+                    </span>
+                </div>
+                {% endif %}
+                {% if user.profile and user.profile.emergency_contact_name %}
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Emergency Contact:</strong><br>
+                        <span class="text-muted">{{ user.profile.emergency_contact_name }}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Emergency Phone:</strong><br>
+                        <span class="text-muted">{{ user.profile.emergency_contact_phone or 'Not provided' }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Professional Information -->
+            {% if user.profile and (user.profile.occupation or user.profile.employer or user.profile.annual_income) %}
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-briefcase me-2"></i>Professional Information</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Occupation:</strong><br>
+                        <span class="text-muted">{{ user.profile.occupation or 'Not provided' }}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Employer:</strong><br>
+                        <span class="text-muted">{{ user.profile.employer or 'Not provided' }}</span>
+                    </div>
+                </div>
+                {% if user.profile.annual_income %}
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Annual Income:</strong><br>
+                        <span class="text-muted">₹{{ "{:,}".format(user.profile.annual_income) }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Documents -->
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-file-alt me-2"></i>Documents</h5>
+                {% if documents %}
+                    <div class="row">
+                        {% for doc in documents %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    {% if doc.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) %}
+                                        <img src="{{ url_for('view_document', document_id=doc.id) }}" 
+                                             class="document-thumbnail mb-2" alt="Document">
+                                    {% else %}
+                                        <div class="document-placeholder mb-2 mx-auto">
+                                            <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                        </div>
+                                    {% endif %}
+                                    <h6 class="card-title">{{ doc.document_type.replace('_', ' ').title() }}</h6>
+                                    <p class="card-text small text-muted">{{ doc.uploaded_at.strftime('%d %b %Y') }}</p>
+                                    {% if doc.verification_status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif doc.verification_status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif doc.verification_status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% endif %}
+                                    <div class="mt-2">
+                                        <a href="{{ url_for('verify_document', doc_id=doc.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>Review
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No documents uploaded yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Panel -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin_documents', user_search=user.email) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt me-1"></i>View All Documents
+                    </a>
+                    <a href="mailto:{{ user.email }}" class="btn btn-outline-info">
+                        <i class="fas fa-envelope me-1"></i>Send Email
+                    </a>
+                    {% if user.phone %}
+                    <a href="tel:{{ user.phone }}" class="btn btn-outline-success">
+                        <i class="fas fa-phone me-1"></i>Call User
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-outline-warning" onclick="exportProfile()">
+                        <i class="fas fa-download me-1"></i>Export Profile
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-chart-bar me-2"></i>Profile Statistics</h5>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ document_stats.total or 0 }}</h4>
+                        <small class="text-muted">Total Documents</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ document_stats.approved or 0 }}</h4>
+                        <small class="text-muted">Approved</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ document_stats.pending or 0 }}</h4>
+                        <small class="text-muted">Pending</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-danger">{{ document_stats.rejected or 0 }}</h4>
+                        <small class="text-muted">Rejected</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification Timeline -->
+            {% if verification_timeline %}
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+                <div class="verification-timeline">
+                    {% for activity in verification_timeline %}
+                    <div class="timeline-item {{ activity.status }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ activity.action }}</strong>
+                                <br><small class="text-muted">{{ activity.document_type.replace('_', ' ').title() }}</small>
+                                {% if activity.notes %}
+                                    <br><small class="text-muted">{{ activity.notes }}</small>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ activity.timestamp.strftime('%d %b') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Profile Completion -->
+            <div class="info-card">
+                <h5 class="mb-3"><i class="fas fa-tasks me-2"></i>Profile Completion</h5>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Personal Info
+                        <span class="badge bg-{% if user.profile and user.profile.full_name %}success{% else %}secondary{% endif %} rounded-pill">
+                            {% if user.profile and user.profile.full_name %}✓{% else %}○{% endif %}
+                        </span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Contact Details
+                        <span class="badge bg-{% if user.profile and user.profile.phone %}success{% else %}secondary{% endif %} rounded-pill">
+                            {% if user.profile and user.profile.phone %}✓{% else %}○{% endif %}
+                        </span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Address
+                        <span class="badge bg-{% if user.profile and user.profile.address %}success{% else %}secondary{% endif %} rounded-pill">
+                            {% if user.profile and user.profile.address %}✓{% else %}○{% endif %}
+                        </span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Profile Picture
+                        <span class="badge bg-{% if user.profile and user.profile.profile_picture %}success{% else %}secondary{% endif %} rounded-pill">
+                            {% if user.profile and user.profile.profile_picture %}✓{% else %}○{% endif %}
+                        </span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Documents
+                        <span class="badge bg-{% if document_stats.approved > 0 %}success{% else %}secondary{% endif %} rounded-pill">
+                            {% if document_stats.approved > 0 %}✓{% else %}○{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportProfile() {
+    // This would trigger a PDF export or data export
+    alert('Profile export functionality would be implemented here');
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

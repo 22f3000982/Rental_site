@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SubmitField, DecimalField, IntegerField, SelectField
+from flask_wtf.file import FileField, FileAllowed, FileRequired
+from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SubmitField, DecimalField, IntegerField, SelectField, DateField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange, Optional
 from wtforms.widgets import TextArea
 
@@ -85,27 +86,6 @@ class PaymentForm(FlaskForm):
     ], validators=[DataRequired()])
     submit = SubmitField('Pay Now')
 
-class NotificationForm(FlaskForm):
-    recipient_type = SelectField('Send To', choices=[
-        ('all', 'All Active Renters'),
-        ('individual', 'Individual Renter')
-    ], validators=[DataRequired()], default='all')
-    recipient_id = SelectField('Select Renter', coerce=int, validators=[Optional()])
-    message = TextAreaField('Message', validators=[
-        DataRequired(),
-        Length(min=1, max=500, message='Message must be between 1 and 500 characters.')
-    ], widget=TextArea())
-    notification_type = SelectField('Type', choices=[
-        ('announcement', 'Announcement'),
-        ('reminder', 'Reminder'),
-        ('alert', 'Alert'),
-        ('payment', 'Payment Related'),
-        ('maintenance', 'Maintenance')
-    ], validators=[DataRequired()])
-    send_email = BooleanField('Send Email Notification', default=True)
-    enable_chat = BooleanField('Enable Chat Response', default=False)
-    submit = SubmitField('Send Notification')
-
 class ChatMessageForm(FlaskForm):
     message = TextAreaField('Message', validators=[
         DataRequired(),
@@ -155,3 +135,174 @@ class EditRenterForm(FlaskForm):
     is_active = BooleanField('Active Status')
     is_approved = BooleanField('Approved Status')
     submit = SubmitField('Update Renter')
+
+class UserProfileForm(FlaskForm):
+    # Basic Information
+    email = StringField('Email Address', validators=[
+        DataRequired(),
+        Email(message='Please enter a valid email address.')
+    ])
+    
+    # Personal Information
+    full_name = StringField('Full Name', validators=[
+        Optional(),
+        Length(max=100, message='Full name must be less than 100 characters.')
+    ])
+    date_of_birth = DateField('Date of Birth', validators=[Optional()])
+    gender = SelectField('Gender', choices=[
+        ('', 'Select Gender'),
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other')
+    ], validators=[Optional()])
+    nationality = StringField('Nationality', validators=[
+        Optional(),
+        Length(max=50, message='Nationality must be less than 50 characters.')
+    ])
+    marital_status = SelectField('Marital Status', choices=[
+        ('', 'Select Status'),
+        ('single', 'Single'),
+        ('married', 'Married'),
+        ('divorced', 'Divorced'),
+        ('widowed', 'Widowed')
+    ], validators=[Optional()])
+    
+    # Address Information
+    permanent_address = TextAreaField('Permanent Address', validators=[Optional()])
+    current_address = TextAreaField('Current Address', validators=[Optional()])
+    city = StringField('City', validators=[
+        Optional(),
+        Length(max=50, message='City must be less than 50 characters.')
+    ])
+    state = StringField('State', validators=[
+        Optional(),
+        Length(max=50, message='State must be less than 50 characters.')
+    ])
+    postal_code = StringField('Postal Code', validators=[
+        Optional(),
+        Length(max=10, message='Postal code must be less than 10 characters.')
+    ])
+    country = StringField('Country', validators=[
+        Optional(),
+        Length(max=50, message='Country must be less than 50 characters.')
+    ])
+    
+    # Contact Information
+    alternate_phone = StringField('Alternate Phone', validators=[
+        Optional(),
+        Length(max=20, message='Phone number must be less than 20 characters.')
+    ])
+    whatsapp_number = StringField('WhatsApp Number', validators=[
+        Optional(),
+        Length(max=20, message='WhatsApp number must be less than 20 characters.')
+    ])
+    
+    # Emergency Contact
+    emergency_contact_name = StringField('Emergency Contact Name', validators=[
+        Optional(),
+        Length(max=100, message='Name must be less than 100 characters.')
+    ])
+    emergency_contact_phone = StringField('Emergency Contact Phone', validators=[
+        Optional(),
+        Length(max=20, message='Phone number must be less than 20 characters.')
+    ])
+    emergency_contact_relationship = StringField('Relationship', validators=[
+        Optional(),
+        Length(max=50, message='Relationship must be less than 50 characters.')
+    ])
+    emergency_contact_address = TextAreaField('Emergency Contact Address', validators=[Optional()])
+    
+    # Professional Information
+    occupation = StringField('Occupation', validators=[
+        Optional(),
+        Length(max=100, message='Occupation must be less than 100 characters.')
+    ])
+    company_name = StringField('Company Name', validators=[
+        Optional(),
+        Length(max=100, message='Company name must be less than 100 characters.')
+    ])
+    job_title = StringField('Job Title', validators=[
+        Optional(),
+        Length(max=100, message='Job title must be less than 100 characters.')
+    ])
+    work_address = TextAreaField('Work Address', validators=[Optional()])
+    monthly_income = DecimalField('Monthly Income', validators=[
+        Optional(),
+        NumberRange(min=0, message='Income must be positive')
+    ])
+    
+    # ID Information
+    aadhar_number = StringField('Aadhar Number', validators=[
+        Optional(),
+        Length(max=20, message='Aadhar number must be less than 20 characters.')
+    ])
+    pan_number = StringField('PAN Number', validators=[
+        Optional(),
+        Length(max=20, message='PAN number must be less than 20 characters.')
+    ])
+    
+    # Previous Address
+    previous_address = TextAreaField('Previous Address', validators=[Optional()])
+    previous_landlord_name = StringField('Previous Landlord Name', validators=[
+        Optional(),
+        Length(max=100, message='Name must be less than 100 characters.')
+    ])
+    previous_landlord_contact = StringField('Previous Landlord Contact', validators=[
+        Optional(),
+        Length(max=20, message='Contact must be less than 20 characters.')
+    ])
+    
+    # Agreement Details
+    lease_start_date = DateField('Lease Start Date', validators=[Optional()])
+    lease_end_date = DateField('Lease End Date', validators=[Optional()])
+    security_deposit = DecimalField('Security Deposit', validators=[
+        Optional(),
+        NumberRange(min=0, message='Security deposit must be positive')
+    ])
+    
+    submit = SubmitField('Update Profile')
+
+class DocumentUploadForm(FlaskForm):
+    document_type = SelectField('Document Type', choices=[
+        ('', 'Select Document Type'),
+        ('aadhar', 'Aadhar Card'),
+        ('pan', 'PAN Card'),
+        ('agreement', 'Rental Agreement'),
+        ('passport', 'Passport'),
+        ('driving_license', 'Driving License'),
+        ('bank_statement', 'Bank Statement'),
+        ('salary_slip', 'Salary Slip'),
+        ('other', 'Other Document')
+    ], validators=[DataRequired(message='Please select a document type.')])
+    
+    file = FileField('Document File', validators=[
+        FileRequired(message='Please select a file to upload.'),
+        FileAllowed(['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'], 
+                   'Only images (JPG, PNG) and documents (PDF, DOC, DOCX) are allowed!')
+    ])
+    
+    description = TextAreaField('Description (Optional)', validators=[Optional()])
+    
+    submit = SubmitField('Upload Document')
+
+class DocumentVerificationForm(FlaskForm):
+    verification_status = SelectField('Verification Status', choices=[
+        ('pending', 'Pending'),
+        ('verified', 'Verified'),
+        ('rejected', 'Rejected')
+    ], validators=[DataRequired()])
+    
+    verification_notes = TextAreaField('Verification Notes', validators=[
+        Optional(),
+        Length(max=500, message='Notes must be less than 500 characters.')
+    ])
+    
+    submit = SubmitField('Update Verification Status')
+
+class ProfilePictureForm(FlaskForm):
+    profile_picture = FileField('Profile Picture', validators=[
+        FileRequired(message='Please select a profile picture.'),
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Only JPG, JPEG and PNG images are allowed!')
+    ])
+    
+    submit = SubmitField('Upload Profile Picture')

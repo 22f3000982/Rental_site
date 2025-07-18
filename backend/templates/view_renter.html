@@ -72,7 +72,13 @@
                 <div class="card bg-light">
                     <div class="card-body">
                         <h6>Member Since</h6>
-                        <strong>{{ renter.date_created.strftime('%d %b %Y') }}</strong>
+                        <strong>
+                            {% if renter.created_at %}
+                                {{ renter.created_at.strftime('%d %b %Y') }}
+                            {% else %}
+                                Not available
+                            {% endif %}
+                        </strong>
                     </div>
                 </div>
             </div>
@@ -84,6 +90,158 @@
                         <strong class="font-monospace">{{ renter.password_plain }}</strong>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Documents Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-alt me-2"></i>
+                    Documents Verification
+                    {% if documents %}
+                        <span class="badge bg-info ms-2">{{ documents|length }}</span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if documents %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Document Type</th>
+                                    <th>Upload Date</th>
+                                    <th>Status</th>
+                                    <th>Verified By</th>
+                                    <th>Verification Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in documents %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-alt me-2 text-primary"></i>
+                                            <div>
+                                                <strong>{{ document.document_type.title().replace('_', ' ') }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ document.original_filename }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ document.uploaded_at.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        {% if document.verification_status == 'pending' %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock me-1"></i>Pending
+                                            </span>
+                                        {% elif document.verification_status == 'verified' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Verified
+                                            </span>
+                                        {% elif document.verification_status == 'rejected' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>Rejected
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if document.verified_by %}
+                                            {{ document.verifier.username }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if document.verification_date %}
+                                            {{ document.verification_date.strftime('%d %b %Y') }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('view_document', document_id=document.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" 
+                                               title="View Document"
+                                               target="_blank">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if document.verification_status == 'pending' %}
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-success" 
+                                                        onclick="verifyDocument({{ document.id }}, 'verified')"
+                                                        title="Approve Document">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-danger" 
+                                                        onclick="verifyDocument({{ document.id }}, 'rejected')"
+                                                        title="Reject Document">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            {% else %}
+                                                <a href="{{ url_for('verify_document', document_id=document.id) }}" 
+                                                   class="btn btn-sm btn-outline-warning"
+                                                   title="Update Verification">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Quick Document Status Summary -->
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body py-2">
+                                    <strong class="text-warning">{{ documents|selectattr('verification_status', 'equalto', 'pending')|list|length }}</strong>
+                                    <br><small>Pending</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body py-2">
+                                    <strong class="text-success">{{ documents|selectattr('verification_status', 'equalto', 'verified')|list|length }}</strong>
+                                    <br><small>Verified</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body py-2">
+                                    <strong class="text-danger">{{ documents|selectattr('verification_status', 'equalto', 'rejected')|list|length }}</strong>
+                                    <br><small>Rejected</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light text-center">
+                                <div class="card-body py-2">
+                                    <strong class="text-info">{{ documents|length }}</strong>
+                                    <br><small>Total</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No documents uploaded by this renter yet.
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -257,9 +415,307 @@
         </div>
     </div>
 </div>
+{% endif %}
+
+<style>
+/* Dark Mode Styles for View Renter Page */
+.dark-mode .card-header {
+    background-color: #374151 !important;
+    border-bottom: 1px solid #4b5563;
+    color: white;
+}
+
+.dark-mode .card-header h5 {
+    color: white !important;
+}
+
+.dark-mode .card-body {
+    background-color: #374151;
+    color: white;
+}
+
+.dark-mode .table {
+    background-color: transparent;
+    color: white;
+}
+
+.dark-mode .table td {
+    border-color: #4b5563;
+    color: white;
+}
+
+.dark-mode .table th {
+    background-color: #4b5563;
+    border-color: #6b7280;
+    color: white;
+}
+
+.dark-mode .text-muted {
+    color: #9ca3af !important;
+}
+
+.dark-mode .text-primary {
+    color: #60a5fa !important;
+}
+
+.dark-mode .btn-outline-primary {
+    color: #60a5fa;
+    border-color: #60a5fa;
+}
+
+.dark-mode .btn-outline-primary:hover {
+    background-color: #60a5fa;
+    border-color: #60a5fa;
+    color: #1f2937;
+}
+
+.dark-mode .btn-outline-warning {
+    color: #fbbf24;
+    border-color: #fbbf24;
+}
+
+.dark-mode .btn-outline-warning:hover {
+    background-color: #fbbf24;
+    border-color: #fbbf24;
+    color: #1f2937;
+}
+
+.dark-mode .btn-outline-danger {
+    color: #f87171;
+    border-color: #f87171;
+}
+
+.dark-mode .btn-outline-danger:hover {
+    background-color: #f87171;
+    border-color: #f87171;
+    color: #1f2937;
+}
+
+.dark-mode .badge.bg-info {
+    background-color: #60a5fa !important;
+    color: #1f2937;
+}
+
+.dark-mode .badge.bg-warning {
+    background-color: #fbbf24 !important;
+    color: #1f2937;
+}
+
+.dark-mode .badge.bg-success {
+    background-color: #10b981 !important;
+    color: white;
+}
+
+.dark-mode .badge.bg-danger {
+    background-color: #ef4444 !important;
+    color: white;
+}
+
+.dark-mode .alert-info {
+    background-color: #1e3a8a;
+    border-color: #3730a3;
+    color: #93c5fd;
+}
+
+.dark-mode .bg-light {
+    background-color: #4b5563 !important;
+    color: white;
+}
+
+.dark-mode .text-info {
+    color: #60a5fa !important;
+}
+
+.dark-mode .text-success {
+    color: #10b981 !important;
+}
+
+.dark-mode .text-danger {
+    color: #ef4444 !important;
+}
+
+.dark-mode .text-warning {
+    color: #fbbf24 !important;
+}
+
+/* Stats cards at bottom */
+.dark-mode .card.bg-light .card-body {
+    background-color: #4b5563 !important;
+    color: white;
+}
+
+.dark-mode .card.bg-light strong {
+    color: white !important;
+}
+
+.dark-mode .card.bg-light small {
+    color: #d1d5db !important;
+}
+
+/* Profile section styling */
+.dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode h4, .dark-mode h5, .dark-mode h6 {
+    color: white !important;
+}
+
+.dark-mode .text-center h1 {
+    color: white !important;
+}
+
+/* Status badges */
+.dark-mode .badge.bg-secondary {
+    background-color: #6b7280 !important;
+    color: white;
+}
+
+/* Button groups */
+.dark-mode .btn-group .btn {
+    border-color: #4b5563;
+}
+
+/* Table striped rows */
+.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Chart container */
+.dark-mode .chart-container {
+    background-color: #374151;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* Additional dark mode fixes for specific elements */
+.dark-mode .stats-card .card-body {
+    background-color: #374151 !important;
+    color: white !important;
+}
+
+.dark-mode .stats-card h6 {
+    color: #d1d5db !important;
+}
+
+.dark-mode .stats-card .stats-number {
+    color: white !important;
+}
+
+.dark-mode .stats-card small {
+    color: #9ca3af !important;
+}
+
+.dark-mode .payment-card .card-body {
+    color: white !important;
+}
+
+.dark-mode .payment-card h6 {
+    color: white !important;
+}
+
+.dark-mode .payment-card .stats-number {
+    color: white !important;
+}
+
+.dark-mode .payment-card small {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.dark-mode .font-monospace {
+    color: white !important;
+}
+
+/* Fix for user profile section */
+.dark-mode .fa-user-circle {
+    color: #60a5fa !important;
+}
+
+/* Table responsive wrapper */
+.dark-mode .table-responsive {
+    background-color: #374151;
+}
+
+/* Ensure all table text is visible */
+.dark-mode .table tbody tr td {
+    color: white !important;
+}
+
+.dark-mode .table thead tr th {
+    color: white !important;
+}
+
+/* Badge visibility improvements */
+.dark-mode .badge {
+    font-weight: 600;
+}
+
+/* Button group improvements */
+.dark-mode .btn-group .btn-sm {
+    border-width: 1px;
+}
+
+/* Profile picture section */
+.dark-mode .fa-user-circle.text-primary {
+    color: #60a5fa !important;
+}
+
+/* Document type strong text */
+.dark-mode td strong {
+    color: white !important;
+}
+
+/* Filename text */
+.dark-mode td small.text-muted {
+    color: #9ca3af !important;
+}
+
+/* Date columns */
+.dark-mode td {
+    color: white !important;
+}
+
+/* Action button tooltips (if any) */
+.dark-mode .btn[title] {
+    color: inherit;
+}
+</style>
+{% endblock %}
 
 {% block scripts %}
 <script>
+    // Quick document verification function
+    function verifyDocument(documentId, status) {
+        const notes = status === 'rejected' 
+            ? prompt('Please provide a reason for rejection:') 
+            : '';
+        
+        if (status === 'rejected' && !notes) {
+            return; // User cancelled or didn't provide notes
+        }
+        
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/documents/quick_verify/${documentId}`;
+        
+        // Add status
+        const statusInput = document.createElement('input');
+        statusInput.type = 'hidden';
+        statusInput.name = 'status';
+        statusInput.value = status;
+        form.appendChild(statusInput);
+        
+        // Add notes if provided
+        if (notes) {
+            const notesInput = document.createElement('input');
+            notesInput.type = 'hidden';
+            notesInput.name = 'notes';
+            notesInput.value = notes;
+            form.appendChild(notesInput);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    {% if meter_readings %}
     // Usage trend chart
     const ctx = document.getElementById('usageChart').getContext('2d');
     const usageChart = new Chart(ctx, {
@@ -302,7 +758,6 @@
             }
         }
     });
+    {% endif %}
 </script>
-{% endblock %}
-{% endif %}
 {% endblock %}

@@ -65,17 +65,52 @@
                 <!-- Payment Confirmation -->
                 <div class="row">
                     <div class="col-md-12">
-                        <div class="text-center">
-                            <form method="POST" action="{{ url_for('confirm_payment', payment_type=payment_type, payment_id=payment.id) }}">
-                                <input type="hidden" name="payment_method" value="upi">
-                                <button type="submit" class="btn btn-success btn-lg">
-                                    <i class="fas fa-check me-2"></i>
-                                    Confirm Payment
-                                </button>
-                                <a href="{{ url_for('renter_dashboard') }}" class="btn btn-secondary btn-lg ms-2">
-                                    Cancel
-                                </a>
-                            </form>
+                        <div class="card border-success">
+                            <div class="card-header bg-success bg-opacity-10">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-upload me-2"></i>
+                                    Upload Payment Receipt
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Important:</strong> Please upload a clear screenshot or photo of your payment receipt after making the payment via UPI.
+                                </div>
+                                
+                                <form method="POST" action="{{ url_for('confirm_payment', payment_type=payment_type, payment_id=payment.id) }}" enctype="multipart/form-data">
+                                    <input type="hidden" name="payment_method" value="upi">
+                                    
+                                    <div class="mb-3">
+                                        <label for="payment_receipt" class="form-label">
+                                            <i class="fas fa-receipt me-1"></i>Payment Receipt
+                                        </label>
+                                        <input type="file" class="form-control" id="payment_receipt" name="payment_receipt" 
+                                               accept=".jpg,.jpeg,.png,.pdf" required>
+                                        <div class="form-text">
+                                            Upload a screenshot or photo of your payment confirmation. Supported formats: JPG, PNG, PDF. Max size: 5MB.
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="transaction_notes" class="form-label">
+                                            <i class="fas fa-comment me-1"></i>Transaction Notes (Optional)
+                                        </label>
+                                        <textarea class="form-control" id="transaction_notes" name="transaction_notes" rows="3" 
+                                                  placeholder="Add any notes about the payment (e.g., UPI ID used, transaction reference)"></textarea>
+                                    </div>
+                                    
+                                    <div class="text-center">
+                                        <button type="submit" class="btn btn-success btn-lg">
+                                            <i class="fas fa-check me-2"></i>
+                                            Submit Payment for Approval
+                                        </button>
+                                        <a href="{{ url_for('renter_dashboard') }}" class="btn btn-secondary btn-lg ms-2">
+                                            Cancel
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -83,4 +118,22 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const receiptInput = document.getElementById('payment_receipt');
+    
+    receiptInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const fileSize = this.files[0].size;
+            const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+            
+            if (fileSize > 5 * 1024 * 1024) {
+                alert('File size is ' + fileSizeMB + 'MB. Maximum allowed size is 5MB.');
+                this.value = '';
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

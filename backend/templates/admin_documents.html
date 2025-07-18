@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Document Management - Admin{% endblock %}
+
+{% block head %}
+<style>
+    .document-card {
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+    }
+    
+    .document-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+    
+    .filter-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .document-preview {
+        max-width: 100px;
+        max-height: 100px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-row .col-md-3 {
+            margin-bottom: 1rem;
+        }
+        
+        .filter-section {
+            padding: 0.75rem;
+        }
+        
+        .document-card {
+            margin-bottom: 1rem;
+        }
+        
+        .btn-sm {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .table-responsive {
+            border: none;
+        }
+        
+        .table-responsive table {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-alt me-2"></i>Document Management</h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+            <a href="{{ url_for('admin_profiles') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-users me-1"></i>View Profiles
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row stats-row mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <h4 class="card-title">{{ total_documents }}</h4>
+                    <p class="card-text">Total Documents</p>
+                    <i class="fas fa-file-alt fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card bg-warning text-white text-center">
+                <div class="card-body">
+                    <h4 class="card-title">{{ pending_verification }}</h4>
+                    <p class="card-text">Pending Review</p>
+                    <i class="fas fa-clock fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card bg-success text-white text-center">
+                <div class="card-body">
+                    <h4 class="card-title">{{ verified_documents }}</h4>
+                    <p class="card-text">Approved</p>
+                    <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card bg-danger text-white text-center">
+                <div class="card-body">
+                    <h4 class="card-title">{{ rejected_documents }}</h4>
+                    <p class="card-text">Rejected</p>
+                    <i class="fas fa-times-circle fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select form-select-sm">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="approved" {% if request.args.get('status') == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="rejected" {% if request.args.get('status') == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="doc_type" class="form-label">Document Type</label>
+                <select name="doc_type" id="doc_type" class="form-select form-select-sm">
+                    <option value="">All Types</option>
+                    <option value="profile_picture" {% if request.args.get('doc_type') == 'profile_picture' %}selected{% endif %}>Profile Picture</option>
+                    <option value="aadhar_card" {% if request.args.get('doc_type') == 'aadhar_card' %}selected{% endif %}>Aadhar Card</option>
+                    <option value="agreement_paper" {% if request.args.get('doc_type') == 'agreement_paper' %}selected{% endif %}>Agreement Paper</option>
+                    <option value="other" {% if request.args.get('doc_type') == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="user_search" class="form-label">User</label>
+                <input type="text" name="user_search" id="user_search" class="form-control form-control-sm" 
+                       placeholder="Search by name/email" value="{{ request.args.get('user_search', '') }}">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary btn-sm me-2">
+                    <i class="fas fa-search me-1"></i>Filter
+                </button>
+                <a href="{{ url_for('admin_documents') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    {% if documents %}
+        <!-- Desktop View -->
+        <div class="d-none d-md-block">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Preview</th>
+                            <th>User</th>
+                            <th>Document Type</th>
+                            <th>Uploaded</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in documents %}
+                        <tr>
+                            <td>
+                                {% if doc.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) %}
+                                    <img src="{{ url_for('view_document', document_id=doc.id) }}" 
+                                         class="document-preview" alt="Document preview">
+                                {% else %}
+                                    <div class="document-preview d-flex align-items-center justify-content-center bg-light">
+                                        <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>{{ doc.user.full_name or doc.user.username }}</strong>
+                                </div>
+                                <small class="text-muted">{{ doc.user.email }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ doc.document_type.replace('_', ' ').title() }}</span>
+                            </td>
+                            <td>
+                                <div>{{ doc.uploaded_at.strftime('%d %b %Y') }}</div>
+                                <small class="text-muted">{{ doc.uploaded_at.strftime('%I:%M %p') }}</small>
+                            </td>
+                            <td>
+                                {% if doc.verification_status == 'pending' %}
+                                    <span class="badge bg-warning status-badge">Pending</span>
+                                {% elif doc.verification_status == 'approved' %}
+                                    <span class="badge bg-success status-badge">Approved</span>
+                                {% elif doc.verification_status == 'rejected' %}
+                                    <span class="badge bg-danger status-badge">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('verify_document', document_id=doc.id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>Review
+                                    </a>
+                                    <a href="{{ url_for('view_document', document_id=doc.id) }}" 
+                                       target="_blank" class="btn btn-outline-info btn-sm">
+                                        <i class="fas fa-download me-1"></i>View
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mobile View -->
+        <div class="d-md-none">
+            {% for doc in documents %}
+            <div class="card document-card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-3">
+                            {% if doc.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) %}
+                                <img src="{{ url_for('view_document', document_id=doc.id) }}" 
+                                     class="img-fluid rounded" alt="Document preview">
+                            {% else %}
+                                <div class="text-center bg-light rounded p-3">
+                                    <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-9">
+                            <h6 class="card-title mb-1">{{ doc.user.full_name or doc.user.username }}</h6>
+                            <p class="text-muted small mb-2">{{ doc.user.email }}</p>
+                            <div class="mb-2">
+                                <span class="badge bg-info me-2">{{ doc.document_type.replace('_', ' ').title() }}</span>
+                                {% if doc.verification_status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif doc.verification_status == 'approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif doc.verification_status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </div>
+                            <p class="small text-muted mb-3">{{ doc.uploaded_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('verify_document', document_id=doc.id) }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>Review
+                                </a>
+                                <a href="{{ url_for('view_document', document_id=doc.id) }}" target="_blank" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-download me-1"></i>View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination and pagination.pages > 1 %}
+        <nav aria-label="Document pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_documents', page=pagination.prev_num, **request.args) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != pagination.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_documents', page=page_num, **request.args) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_documents', page=pagination.next_num, **request.args) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No Documents Found</h4>
+            <p class="text-muted">No documents match your current filters.</p>
+            <a href="{{ url_for('admin_documents') }}" class="btn btn-outline-primary">
+                <i class="fas fa-refresh me-1"></i>Clear Filters
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Auto-submit form on filter change
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.filter-section form');
+    const selects = form.querySelectorAll('select');
+    
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            form.submit();
+        });
+    });
+});
+</script>
+{% endblock %}

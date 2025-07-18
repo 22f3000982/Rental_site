@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}My Documents - Rent & Billing System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-file-alt me-2"></i>
+        My Documents
+    </h2>
+    <a href="{{ url_for('upload_document') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>
+        <span class="d-none d-sm-inline">Upload Document</span>
+        <span class="d-sm-none">Upload</span>
+    </a>
+</div>
+
+<!-- Document Summary -->
+<div class="row mb-4 g-3">
+    <div class="col-md-3 col-sm-6">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-2x mb-2"></i>
+                <h4>{{ documents|length }}</h4>
+                <small>Total Documents</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card payment-card">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <h4>{{ documents|selectattr('verification_status', 'equalto', 'verified')|list|length }}</h4>
+                <small>Verified</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+                <h4>{{ documents|selectattr('verification_status', 'equalto', 'pending')|list|length }}</h4>
+                <small>Pending</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card overdue-card">
+            <div class="card-body text-center">
+                <i class="fas fa-times-circle fa-2x mb-2"></i>
+                <h4>{{ documents|selectattr('verification_status', 'equalto', 'rejected')|list|length }}</h4>
+                <small>Rejected</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">
+            <i class="fas fa-rocket me-2"></i>Quick Actions
+        </h5>
+        <div class="row g-2">
+            <div class="col-md-3 col-sm-6">
+                <a href="{{ url_for('upload_document') }}?type=profile_picture" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fas fa-camera me-1"></i>Upload Profile Picture
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <a href="{{ url_for('upload_document') }}?type=aadhar" class="btn btn-outline-info btn-sm w-100">
+                    <i class="fas fa-id-card me-1"></i>Upload Aadhar
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <a href="{{ url_for('upload_document') }}?type=pan" class="btn btn-outline-success btn-sm w-100">
+                    <i class="fas fa-credit-card me-1"></i>Upload PAN
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <a href="{{ url_for('upload_document') }}?type=agreement" class="btn btn-outline-warning btn-sm w-100">
+                    <i class="fas fa-file-contract me-1"></i>Upload Agreement
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Documents by Type -->
+{% if documents_by_type %}
+{% for doc_type, docs in documents_by_type.items() %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            {% if doc_type == 'profile_picture' %}
+                <i class="fas fa-camera me-2"></i>Profile Pictures
+            {% elif doc_type == 'aadhar' %}
+                <i class="fas fa-id-card me-2"></i>Aadhar Cards
+            {% elif doc_type == 'pan' %}
+                <i class="fas fa-credit-card me-2"></i>PAN Cards
+            {% elif doc_type == 'agreement' %}
+                <i class="fas fa-file-contract me-2"></i>Rental Agreements
+            {% elif doc_type == 'passport' %}
+                <i class="fas fa-passport me-2"></i>Passports
+            {% elif doc_type == 'driving_license' %}
+                <i class="fas fa-id-card-alt me-2"></i>Driving Licenses
+            {% elif doc_type == 'bank_statement' %}
+                <i class="fas fa-university me-2"></i>Bank Statements
+            {% elif doc_type == 'salary_slip' %}
+                <i class="fas fa-money-check me-2"></i>Salary Slips
+            {% else %}
+                <i class="fas fa-file me-2"></i>{{ doc_type.replace('_', ' ').title() }}
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>Upload Date</th>
+                        <th>Status</th>
+                        <th>Size</th>
+                        <th class="d-none d-md-table-cell">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in docs %}
+                    <tr>
+                        <td data-label="File Name">
+                            <i class="fas fa-file me-1"></i>
+                            {{ doc.original_filename[:30] }}{% if doc.original_filename|length > 30 %}...{% endif %}
+                        </td>
+                        <td data-label="Upload Date">{{ doc.uploaded_at.strftime('%d %b %Y') }}</td>
+                        <td data-label="Status">
+                            {% if doc.verification_status == 'verified' %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Verified
+                                </span>
+                            {% elif doc.verification_status == 'rejected' %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times me-1"></i>Rejected
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>Pending
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Size">
+                            {% if doc.file_size %}
+                                {% if doc.file_size < 1024 %}
+                                    {{ doc.file_size }} B
+                                {% elif doc.file_size < 1024*1024 %}
+                                    {{ "%.1f"|format(doc.file_size/1024) }} KB
+                                {% else %}
+                                    {{ "%.1f"|format(doc.file_size/(1024*1024)) }} MB
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td data-label="Actions" class="d-none d-md-table-cell">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('view_document', document_id=doc.id) }}" 
+                                   class="btn btn-outline-primary" target="_blank" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('download_document', document_id=doc.id) }}" 
+                                   class="btn btn-outline-success" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% if doc.verification_notes and doc.verification_status == 'rejected' %}
+                    <tr class="bg-light">
+                        <td colspan="5">
+                            <small class="text-danger">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <strong>Admin Notes:</strong> {{ doc.verification_notes }}
+                            </small>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">No Documents Uploaded</h4>
+        <p class="text-muted mb-4">
+            Start by uploading your documents for verification. This helps build trust with the admin.
+        </p>
+        <a href="{{ url_for('upload_document') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-upload me-2"></i>Upload First Document
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Important Notes -->
+<div class="card border-info mt-4">
+    <div class="card-header bg-info bg-opacity-10">
+        <h5 class="card-title mb-0 text-info">
+            <i class="fas fa-info-circle me-2"></i>Important Notes
+        </h5>
+    </div>
+    <div class="card-body">
+        <ul class="mb-0">
+            <li><strong>Verification Process:</strong> All uploaded documents will be reviewed by the admin within 24-48 hours.</li>
+            <li><strong>Document Quality:</strong> Ensure all documents are clear, readable, and contain all necessary information.</li>
+            <li><strong>Privacy:</strong> Your documents are secure and only accessible to authorized admin personnel.</li>
+            <li><strong>Updates:</strong> If a document is rejected, you can upload a new version. The old version will be archived.</li>
+            <li><strong>Notification:</strong> You will receive notifications when your documents are verified or if any action is required.</li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}

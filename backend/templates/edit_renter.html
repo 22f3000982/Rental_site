@@ -33,7 +33,12 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 {{ form.email.label(class="form-label") }}
-                                {{ form.email(class="form-control") }}
+                                <div class="input-group">
+                                    {{ form.email(class="form-control") }}
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                </div>
                                 {% if form.email.errors %}
                                     <div class="text-danger mt-1">
                                         {% for error in form.email.errors %}
@@ -41,6 +46,9 @@
                                         {% endfor %}
                                     </div>
                                 {% endif %}
+                                <small class="form-text text-muted">
+                                    Email address for notifications and communication.
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -144,7 +152,13 @@
                                 <div class="card-body text-center">
                                     <i class="fas fa-calendar-alt fa-2x text-info mb-2"></i>
                                     <h6>Member Since</h6>
-                                    <strong>{{ renter.date_created.strftime('%d %b %Y') }}</strong>
+                                    <strong>
+                                        {% if renter.created_at %}
+                                            {{ renter.created_at.strftime('%d %b %Y') }}
+                                        {% else %}
+                                            Not available
+                                        {% endif %}
+                                    </strong>
                                 </div>
                             </div>
                         </div>

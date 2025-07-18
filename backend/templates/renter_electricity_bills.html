@@ -39,13 +39,13 @@
                             <tbody>
                                 {% for bill in bills %}
                                 <tr>
-                                    <td>{{ calendar.month_name[bill.month] }} {{ bill.year }}</td>
-                                    <td>{{ "%.2f"|format(bill.units_consumed) }}</td>
-                                    <td>₹{{ "%.2f"|format(bill.rate_per_unit) }}</td>
-                                    <td>₹{{ "%.2f"|format(bill.total_amount) }}</td>
-                                    <td>{{ "%.2f"|format(bill.units_paid or 0) }}</td>
-                                    <td>₹{{ "%.2f"|format(bill.amount_paid or 0) }}</td>
-                                    <td>
+                                    <td data-label="Month/Year">{{ calendar.month_name[bill.month] }} {{ bill.year }}</td>
+                                    <td data-label="Units Consumed">{{ "%.2f"|format(bill.units_consumed) }}</td>
+                                    <td data-label="Rate/Unit">₹{{ "%.2f"|format(bill.rate_per_unit) }}</td>
+                                    <td data-label="Total Amount">₹{{ "%.2f"|format(bill.total_amount) }}</td>
+                                    <td data-label="Units Paid">{{ "%.2f"|format(bill.units_paid or 0) }}</td>
+                                    <td data-label="Amount Paid">₹{{ "%.2f"|format(bill.amount_paid or 0) }}</td>
+                                    <td data-label="Remaining">
                                         {% if bill.is_paid %}
                                             <span class="text-success">Fully Paid</span>
                                         {% else %}
@@ -53,7 +53,7 @@
                                             ₹{{ "%.2f"|format(bill.remaining_amount) }}
                                         {% endif %}
                                     </td>
-                                    <td>
+                                    <td data-label="Status">
                                         {% if bill.payment_status == 'approved' %}
                                             <span class="badge bg-success">Paid & Verified</span>
                                         {% elif bill.payment_status == 'pending' %}
@@ -66,7 +66,7 @@
                                             <span class="badge bg-secondary">Unpaid</span>
                                         {% endif %}
                                     </td>
-                                    <td>
+                                    <td data-label="Actions">
                                         {% if bill.payment_status == 'approved' %}
                                             <span class="text-success">
                                                 <i class="fas fa-check-circle"></i> Verified

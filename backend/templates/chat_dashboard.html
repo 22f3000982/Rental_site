@@ -8,8 +8,14 @@
         <i class="fas fa-comments me-2"></i>
         Chat Dashboard
     </h2>
-    <div id="unread-badge" class="badge bg-danger" style="display: none;">
-        <span id="unread-count">0</span> unread
+    <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary btn-sm" onclick="toggleDarkMode()" id="darkModeToggle">
+            <i class="fas fa-moon me-1"></i>
+            <span class="d-none d-sm-inline">Dark Mode</span>
+        </button>
+        <div id="unread-badge" class="badge bg-danger" style="display: none;">
+            <span id="unread-count">0</span> unread
+        </div>
     </div>
 </div>
 
@@ -40,11 +46,7 @@
 <div class="text-center mt-5">
     <i class="fas fa-comments fa-3x text-muted mb-3"></i>
     <h4 class="text-muted">No Conversations Yet</h4>
-    <p class="text-muted">Start chatting with renters by sending notifications with chat enabled.</p>
-    <a href="{{ url_for('send_notification') }}" class="btn btn-primary">
-        <i class="fas fa-bell me-1"></i>
-        Send Notification
-    </a>
+    <p class="text-muted">Chat functionality is available. Renters can initiate conversations with you.</p>
 </div>
 {% endif %}
 
@@ -58,9 +60,77 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+
+/* Dark Mode Chat Dashboard Styles */
+.dark-mode .chat-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.dark-mode .badge.bg-danger {
+    background-color: #ef4444 !important;
+}
+
+.dark-mode .text-muted {
+    color: #9ca3af !important;
+}
+
+.dark-mode .btn-primary {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.dark-mode .btn-primary:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+/* Empty state styling for dark mode */
+.dark-mode .fa-comments.text-muted {
+    color: #6b7280 !important;
+}
+
+.dark-mode h4.text-muted {
+    color: #9ca3af !important;
+}
+
+.dark-mode p.text-muted {
+    color: #9ca3af !important;
+}
 </style>
 
 <script>
+// Load dark mode preference
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        updateDarkModeToggle();
+    }
+});
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    updateDarkModeToggle();
+}
+
+function updateDarkModeToggle() {
+    const toggle = document.getElementById('darkModeToggle');
+    const icon = toggle.querySelector('i');
+    const text = toggle.querySelector('span');
+    
+    if (document.body.classList.contains('dark-mode')) {
+        icon.className = 'fas fa-sun me-1';
+        if (text) text.textContent = 'Light Mode';
+        toggle.classList.remove('btn-outline-secondary');
+        toggle.classList.add('btn-outline-warning');
+    } else {
+        icon.className = 'fas fa-moon me-1';
+        if (text) text.textContent = 'Dark Mode';
+        toggle.classList.remove('btn-outline-warning');
+        toggle.classList.add('btn-outline-secondary');
+    }
+}
+
 // Check for unread messages periodically
 function checkUnreadMessages() {
     fetch('/api/chat/unread_count')

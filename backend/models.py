@@ -14,18 +14,30 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     is_approved = db.Column(db.Boolean, default=False)  # Admin approval required
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime, nullable=True)
     
     # Renter specific fields
     rent_amount = db.Column(db.Numeric(10, 2), default=0.0)
     room_number = db.Column(db.String(20), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
+    full_name = db.Column(db.String(100), nullable=True)
+    
+    # Profile fields
+    profile_picture = db.Column(db.String(255), nullable=True)
+    address = db.Column(db.Text, nullable=True)
+    emergency_contact_name = db.Column(db.String(100), nullable=True)
+    emergency_contact_phone = db.Column(db.String(20), nullable=True)
+    occupation = db.Column(db.String(100), nullable=True)
+    aadhar_number = db.Column(db.String(20), nullable=True)
+    pan_number = db.Column(db.String(20), nullable=True)
+    profile_completion = db.Column(db.Integer, default=0)  # Percentage of profile completed
+    document_verification_status = db.Column(db.String(20), default='pending')  # pending, verified, rejected
     
     # Relationships
     meter_readings = db.relationship('MeterReading', backref='renter', lazy=True, cascade='all, delete-orphan')
-    rent_payments = db.relationship('RentPayment', backref='renter', lazy=True, cascade='all, delete-orphan')
+    rent_payments = db.relationship('RentPayment', foreign_keys='RentPayment.renter_id', backref='renter', lazy=True, cascade='all, delete-orphan')
     electricity_bills = db.relationship('ElectricityBill', foreign_keys='ElectricityBill.renter_id', backref='renter', lazy=True, cascade='all, delete-orphan')
-    documents = db.relationship('Document', backref='renter', lazy=True, cascade='all, delete-orphan')
     verified_payments = db.relationship('ElectricityBill', foreign_keys='ElectricityBill.verified_by', backref='verifier', lazy=True)
     
     def __repr__(self):
@@ -100,6 +112,16 @@ class RentPayment(db.Model):
     transaction_id = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Payment verification fields
+    payment_receipt = db.Column(db.String(255), nullable=True)  # Receipt file path
+    payment_status = db.Column(db.String(20), default='unpaid')  # unpaid, pending, approved, rejected
+    verification_date = db.Column(db.DateTime, nullable=True)
+    verified_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    verification_notes = db.Column(db.Text, nullable=True)
+    
+    # Relationships
+    verifier = db.relationship('User', foreign_keys=[verified_by], backref='verified_rent_payments')
+    
     def __repr__(self):
         return f'<RentPayment {self.renter.username} - {self.month}/{self.year}>'
 
@@ -112,17 +134,6 @@ class SystemSettings(db.Model):
     
     def __repr__(self):
         return f'<SystemSettings {self.id}>'
-
-class Document(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    renter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    document_type = db.Column(db.String(50), nullable=False)  # ID, Agreement, etc.
-    filename = db.Column(db.String(200), nullable=False)
-    file_path = db.Column(db.String(500), nullable=False)
-    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<Document {self.filename}>'
 
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -157,3 +168,92 @@ class ChatMessage(db.Model):
     
     def __repr__(self):
         return f'<ChatMessage from {self.sender.username} to {self.recipient.username}>'
+
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    document_type = db.Column(db.String(50), nullable=False)  # profile_picture, aadhar_card, agreement_paper, other
+    filename = db.Column(db.String(255), nullable=False)  # Stored filename
+    original_filename = db.Column(db.String(255), nullable=False)  # Original filename
+    file_path = db.Column(db.String(500), nullable=False)
+    file_size = db.Column(db.Integer, nullable=True)  # Size in bytes
+    mime_type = db.Column(db.String(100), nullable=True)
+    verification_status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    verified_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    verified_at = db.Column(db.DateTime, nullable=True)
+    admin_notes = db.Column(db.Text, nullable=True)
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='documents')
+    verifier = db.relationship('User', foreign_keys=[verified_by], backref='verified_documents')
+    
+    def __repr__(self):
+        return f'<Document {self.document_type} - {self.user.username}>'
+
+class UserProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    
+    # Personal Information
+    full_name = db.Column(db.String(100), nullable=True)
+    date_of_birth = db.Column(db.Date, nullable=True)
+    gender = db.Column(db.String(10), nullable=True)
+    nationality = db.Column(db.String(50), nullable=True)
+    marital_status = db.Column(db.String(20), nullable=True)
+    
+    # Address Information
+    permanent_address = db.Column(db.Text, nullable=True)
+    current_address = db.Column(db.Text, nullable=True)
+    city = db.Column(db.String(50), nullable=True)
+    state = db.Column(db.String(50), nullable=True)
+    postal_code = db.Column(db.String(10), nullable=True)
+    country = db.Column(db.String(50), nullable=True)
+    
+    # Contact Information
+    phone = db.Column(db.String(20), nullable=True)
+    alternate_phone = db.Column(db.String(20), nullable=True)
+    whatsapp_number = db.Column(db.String(20), nullable=True)
+    
+    # Emergency Contact
+    emergency_contact_name = db.Column(db.String(100), nullable=True)
+    emergency_contact_phone = db.Column(db.String(20), nullable=True)
+    emergency_contact_relationship = db.Column(db.String(50), nullable=True)
+    emergency_contact_address = db.Column(db.Text, nullable=True)
+    
+    # Professional Information
+    occupation = db.Column(db.String(100), nullable=True)
+    employer = db.Column(db.String(100), nullable=True)
+    company_name = db.Column(db.String(100), nullable=True)
+    job_title = db.Column(db.String(100), nullable=True)
+    work_address = db.Column(db.Text, nullable=True)
+    annual_income = db.Column(db.Numeric(12, 2), nullable=True)
+    monthly_income = db.Column(db.Numeric(10, 2), nullable=True)
+    
+    # Additional Information
+    bio = db.Column(db.Text, nullable=True)
+    profile_picture = db.Column(db.String(255), nullable=True)
+    address = db.Column(db.Text, nullable=True)
+    
+    # Previous Address (for reference)
+    previous_address = db.Column(db.Text, nullable=True)
+    previous_landlord_name = db.Column(db.String(100), nullable=True)
+    previous_landlord_contact = db.Column(db.String(20), nullable=True)
+    
+    # Agreement Details
+    lease_start_date = db.Column(db.Date, nullable=True)
+    lease_end_date = db.Column(db.Date, nullable=True)
+    security_deposit = db.Column(db.Numeric(10, 2), nullable=True)
+    
+    # Profile Status
+    profile_verified = db.Column(db.Boolean, default=False)
+    verification_date = db.Column(db.DateTime, nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', backref=db.backref('profile', uselist=False))
+    
+    def __repr__(self):
+        return f'<UserProfile {self.user.username}>'

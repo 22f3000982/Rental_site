@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Rent & Billing System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-user me-2"></i>
+        My Profile
+    </h2>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('edit_profile') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-edit me-1"></i>
+            <span class="d-none d-sm-inline">Edit Profile</span>
+            <span class="d-sm-none">Edit</span>
+        </a>
+        <a href="{{ url_for('upload_profile_picture') }}" class="btn btn-info btn-sm">
+            <i class="fas fa-camera me-1"></i>
+            <span class="d-none d-sm-inline">Update Picture</span>
+            <span class="d-sm-none">Picture</span>
+        </a>
+        <a href="{{ url_for('user_documents') }}" class="btn btn-success btn-sm">
+            <i class="fas fa-file-alt me-1"></i>
+            <span class="d-none d-sm-inline">Documents</span>
+            <span class="d-sm-none">Docs</span>
+        </a>
+    </div>
+</div>
+
+<!-- Profile Completion Alert -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Profile Completion
+                    </h5>
+                    <span class="badge {% if completion_percentage >= 80 %}bg-success{% elif completion_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %} fs-6">
+                        {{ completion_percentage }}%
+                    </span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar {% if completion_percentage >= 80 %}bg-success{% elif completion_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                         role="progressbar" style="width: {{ completion_percentage }}%" 
+                         aria-valuenow="{{ completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+                <small class="text-muted mt-2 d-block">
+                    {% if completion_percentage < 50 %}
+                        Complete your profile to gain admin trust and faster verification.
+                    {% elif completion_percentage < 80 %}
+                        You're almost there! Add more details to complete your profile.
+                    {% else %}
+                        Great! Your profile is well completed.
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Document Verification Status -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-shield-alt me-2"></i>Verification Status
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-check me-2 text-primary"></i>
+                            <div>
+                                <strong>Profile Status:</strong>
+                                {% if user.document_verification_status == 'verified' %}
+                                    <span class="badge bg-success ms-2">Verified</span>
+                                {% elif user.document_verification_status == 'rejected' %}
+                                    <span class="badge bg-danger ms-2">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-warning ms-2">Pending Verification</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-check me-2 text-success"></i>
+                            <div>
+                                <strong>Documents:</strong>
+                                <span class="badge bg-info ms-2">{{ documents|length }} uploaded</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Information -->
+<div class="row g-4">
+    <!-- Basic Information -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    {% if user.profile_picture %}
+                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                             class="rounded-circle mb-3" 
+                             style="width: 120px; height: 120px; object-fit: cover;" 
+                             alt="Profile Picture">
+                    {% else %}
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 120px; height: 120px;">
+                            <i class="fas fa-user fa-3x text-white"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <h4 class="card-title">{{ profile.full_name or user.username }}</h4>
+                <p class="text-muted">{{ user.occupation or 'Occupation not specified' }}</p>
+                
+                <div class="row text-center mt-4">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h5 class="text-primary">{{ user.room_number or 'N/A' }}</h5>
+                            <small class="text-muted">Room Number</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="text-success">₹{{ user.rent_amount or '0' }}</h5>
+                        <small class="text-muted">Monthly Rent</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-address-book me-2"></i>Contact Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless table-sm">
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-envelope text-primary me-2"></i><strong>Email:</strong></td>
+                                <td>{{ user.email }}</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-phone text-success me-2"></i><strong>Phone:</strong></td>
+                                <td>{{ user.phone or 'Not provided' }}</td>
+                            </tr>
+                            {% if profile and profile.alternate_phone %}
+                            <tr>
+                                <td><i class="fas fa-mobile-alt text-info me-2"></i><strong>Alt Phone:</strong></td>
+                                <td>{{ profile.alternate_phone }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if profile and profile.whatsapp_number %}
+                            <tr>
+                                <td><i class="fab fa-whatsapp text-success me-2"></i><strong>WhatsApp:</strong></td>
+                                <td>{{ profile.whatsapp_number }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if profile and profile.city %}
+                            <tr>
+                                <td><i class="fas fa-map-marker-alt text-danger me-2"></i><strong>City:</strong></td>
+                                <td>{{ profile.city }}, {{ profile.state or '' }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal Details -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-id-card me-2"></i>Personal Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless table-sm">
+                        <tbody>
+                            {% if profile and profile.date_of_birth %}
+                            <tr>
+                                <td><i class="fas fa-birthday-cake text-pink me-2"></i><strong>DOB:</strong></td>
+                                <td>{{ profile.date_of_birth.strftime('%d %b %Y') }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if profile and profile.gender %}
+                            <tr>
+                                <td><i class="fas fa-venus-mars text-purple me-2"></i><strong>Gender:</strong></td>
+                                <td>{{ profile.gender.title() }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if profile and profile.nationality %}
+                            <tr>
+                                <td><i class="fas fa-globe text-primary me-2"></i><strong>Nationality:</strong></td>
+                                <td>{{ profile.nationality }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if profile and profile.marital_status %}
+                            <tr>
+                                <td><i class="fas fa-heart text-danger me-2"></i><strong>Marital Status:</strong></td>
+                                <td>{{ profile.marital_status.title() }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if user.aadhar_number %}
+                            <tr>
+                                <td><i class="fas fa-id-card-alt text-warning me-2"></i><strong>Aadhar:</strong></td>
+                                <td>{{ user.aadhar_number }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if user.pan_number %}
+                            <tr>
+                                <td><i class="fas fa-credit-card text-info me-2"></i><strong>PAN:</strong></td>
+                                <td>{{ user.pan_number }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Professional and Emergency Contact -->
+{% if profile %}
+<div class="row g-4 mt-2">
+    {% if profile.company_name or profile.job_title or profile.monthly_income %}
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-briefcase me-2"></i>Professional Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless table-sm">
+                        <tbody>
+                            {% if profile.company_name %}
+                            <tr>
+                                <td><i class="fas fa-building text-primary me-2"></i><strong>Company:</strong></td>
+                                <td>{{ profile.company_name }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if profile.job_title %}
+                            <tr>
+                                <td><i class="fas fa-user-tie text-success me-2"></i><strong>Job Title:</strong></td>
+                                <td>{{ profile.job_title }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if profile.monthly_income %}
+                            <tr>
+                                <td><i class="fas fa-rupee-sign text-warning me-2"></i><strong>Monthly Income:</strong></td>
+                                <td>₹{{ "%.2f"|format(profile.monthly_income) }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if profile.work_address %}
+                            <tr>
+                                <td><i class="fas fa-map-marker-alt text-danger me-2"></i><strong>Work Address:</strong></td>
+                                <td>{{ profile.work_address }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if user.emergency_contact_name or user.emergency_contact_phone %}
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Emergency Contact
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless table-sm">
+                        <tbody>
+                            {% if user.emergency_contact_name %}
+                            <tr>
+                                <td><i class="fas fa-user text-primary me-2"></i><strong>Name:</strong></td>
+                                <td>{{ user.emergency_contact_name }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if user.emergency_contact_phone %}
+                            <tr>
+                                <td><i class="fas fa-phone text-success me-2"></i><strong>Phone:</strong></td>
+                                <td>{{ user.emergency_contact_phone }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if profile.emergency_contact_relationship %}
+                            <tr>
+                                <td><i class="fas fa-heart text-danger me-2"></i><strong>Relationship:</strong></td>
+                                <td>{{ profile.emergency_contact_relationship }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if profile.emergency_contact_address %}
+                            <tr>
+                                <td><i class="fas fa-map-marker-alt text-warning me-2"></i><strong>Address:</strong></td>
+                                <td>{{ profile.emergency_contact_address }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Recent Documents -->
+{% if documents %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-alt me-2"></i>Recent Documents
+                </h5>
+                <a href="{{ url_for('user_documents') }}" class="btn btn-outline-primary btn-sm">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Document Type</th>
+                                <th>Upload Date</th>
+                                <th>Status</th>
+                                <th class="d-none d-md-table-cell">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for document in documents[:5] %}
+                            <tr>
+                                <td data-label="Document Type">
+                                    <i class="fas fa-file me-1"></i>
+                                    {{ document.document_type.replace('_', ' ').title() }}
+                                </td>
+                                <td data-label="Upload Date">{{ document.uploaded_at.strftime('%d %b %Y') }}</td>
+                                <td data-label="Status">
+                                    {% if document.verification_status == 'verified' %}
+                                        <span class="badge bg-success">Verified</span>
+                                    {% elif document.verification_status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="Actions" class="d-none d-md-table-cell">
+                                    <a href="{{ url_for('view_document', document_id=document.id) }}" 
+                                       class="btn btn-outline-primary btn-sm" target="_blank">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Call to Action -->
+{% if completion_percentage < 80 or documents|length < 3 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <h5 class="card-title text-primary">
+                    <i class="fas fa-rocket me-2"></i>Complete Your Profile
+                </h5>
+                <p class="card-text">
+                    Complete your profile and upload required documents to gain admin trust and faster approvals.
+                </p>
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                    {% if completion_percentage < 80 %}
+                    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit me-1"></i>Complete Profile
+                    </a>
+                    {% endif %}
+                    {% if documents|length < 3 %}
+                    <a href="{{ url_for('upload_document') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-upload me-1"></i>Upload Documents
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

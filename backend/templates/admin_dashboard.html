@@ -8,33 +8,41 @@
         <i class="fas fa-tachometer-alt me-2"></i>
         Admin Dashboard
     </h2>
-    <div>
-        <a href="{{ url_for('add_meter_reading') }}" class="btn btn-primary me-2">
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('add_meter_reading') }}" class="btn btn-primary btn-sm">
             <i class="fas fa-plus me-1"></i>Add Reading
         </a>
-        <a href="{{ url_for('admin_reading_history') }}" class="btn btn-info me-2">
+        <a href="{{ url_for('admin_reading_history') }}" class="btn btn-info btn-sm">
             <i class="fas fa-history me-1"></i>Reading History
         </a>
-        <a href="{{ url_for('admin_bills') }}" class="btn btn-info me-2">
+        <a href="{{ url_for('admin_payment_history') }}" class="btn btn-success btn-sm">
+            <i class="fas fa-table me-1"></i>Payment History
+        </a>
+        <a href="{{ url_for('admin_payment_history_table') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-th-list me-1"></i>Payment Table
+        </a>
+        <a href="{{ url_for('admin_user_payment_history') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-receipt me-1"></i>User Payment History
+        </a>
+        <a href="{{ url_for('admin_bills') }}" class="btn btn-info btn-sm">
             <i class="fas fa-file-invoice me-1"></i>Manage Bills
         </a>
-        <a href="{{ url_for('admin_monthly_report') }}" class="btn btn-warning me-2">
+        <a href="{{ url_for('admin_monthly_report') }}" class="btn btn-warning btn-sm">
             <i class="fas fa-chart-line me-1"></i>Monthly Report
         </a>
-        <a href="{{ url_for('admin_pending_payments') }}" class="btn btn-danger me-2">
-            <i class="fas fa-clock me-1"></i>Pending Payments
-            {% if pending_verifications > 0 %}
-            <span class="badge bg-warning ms-1">{{ pending_verifications }}</span>
+        <a href="{{ url_for('admin_pending_payments') }}" class="btn btn-danger btn-sm">
+            <i class="fas fa-clock me-1"></i>
+            <span class="d-none d-md-inline">Pending Payments</span>
+            <span class="d-md-none">Pending</span>
+            {% if pending_rent_verifications + pending_electricity_verifications > 0 %}
+            <span class="badge bg-warning ms-1">{{ pending_rent_verifications + pending_electricity_verifications }}</span>
             {% endif %}
-        </a>
-        <a href="{{ url_for('send_notification') }}" class="btn btn-success">
-            <i class="fas fa-bell me-1"></i>Send Notification
         </a>
     </div>
 </div>
 
 <!-- Stats Cards -->
-<div class="row mb-4">
+<div class="row mb-4 g-3">
     <div class="col-md-3">
         <div class="card payment-card">
             <div class="card-body">
@@ -85,14 +93,14 @@
 </div>
 
 <!-- Pending Payment Verifications Alert -->
-{% if pending_verifications > 0 %}
+{% if pending_rent_verifications + pending_electricity_verifications > 0 %}
 <div class="row mb-4">
     <div class="col-md-12">
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
             <h4 class="alert-heading">
                 <i class="fas fa-clock me-2"></i>Payment Verifications Required!
             </h4>
-            <p>You have <strong>{{ pending_verifications }}</strong> payment receipt{{ 's' if pending_verifications != 1 else '' }} pending verification.</p>
+            <p>You have <strong>{{ pending_rent_verifications + pending_electricity_verifications }}</strong> payment receipt{{ 's' if (pending_rent_verifications + pending_electricity_verifications) != 1 else '' }} pending verification.</p>
             <hr>
             <p class="mb-0">
                 <a href="{{ url_for('admin_pending_payments') }}" class="btn btn-warning">
@@ -100,6 +108,29 @@
                 </a>
             </p>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Pending Document Verifications Alert -->
+{% if pending_document_verifications > 0 %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">
+                <i class="fas fa-file-alt me-2"></i>Document Verifications Required!
+            </h4>
+            <p>You have <strong>{{ pending_document_verifications }}</strong> document{{ 's' if pending_document_verifications != 1 else '' }} pending verification.</p>
+            <hr>
+            <p class="mb-0">
+                <a href="{{ url_for('admin_documents') }}" class="btn btn-info">
+                    <i class="fas fa-file-alt me-1"></i>Review Documents
+                </a>
+                <a href="{{ url_for('admin_renters') }}" class="btn btn-outline-info ms-2">
+                    <i class="fas fa-users me-1"></i>View Renters
+                </a>
+            </p>
         </div>
     </div>
 </div>

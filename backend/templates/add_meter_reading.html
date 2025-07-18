@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-md-8 col-sm-10 col-11">
         <div class="card">
             <div class="card-body">
                 <h3 class="card-title text-center mb-4">
@@ -20,7 +20,7 @@
                 <form method="POST">
                     {{ form.hidden_tag() }}
                     
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 {{ form.renter_id.label(class="form-label") }}
@@ -174,4 +174,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+/* Dark Mode Styles for Add Meter Reading Form */
+.dark-mode .alert-info {
+    background-color: #1e3a8a !important;
+    border-color: #3730a3 !important;
+    color: #93c5fd !important;
+}
+
+.dark-mode .form-label {
+    color: white !important;
+}
+
+.dark-mode .form-control[readonly] {
+    background-color: #4b5563 !important;
+    color: #d1d5db !important;
+    border-color: #6b7280;
+}
+
+.dark-mode .btn-lg {
+    font-weight: 600;
+}
+
+.dark-mode .card-title {
+    color: white !important;
+}
+
+.dark-mode .fas.fa-bolt {
+    color: #fbbf24 !important;
+}
+
+.dark-mode .fas.fa-info-circle {
+    color: #60a5fa !important;
+}
+</style>
 {% endblock %}
