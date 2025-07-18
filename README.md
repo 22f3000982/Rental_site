@@ -5,6 +5,7 @@ A comprehensive web-based rental management system built with Flask, designed to
 ## Features
 
 ### For Renters
+
 - **Dashboard**: View current rent and electricity bill status
 - **Payment Management**: Upload payment receipts and track payment history
 - **Meter Readings**: View historical meter readings
@@ -14,6 +15,7 @@ A comprehensive web-based rental management system built with Flask, designed to
 - **Profile Management**: Complete and manage personal profiles
 
 ### For Administrators
+
 - **Tenant Management**: Approve/manage tenant accounts
 - **Payment Verification**: Verify uploaded payment receipts
 - **Meter Reading Management**: Add and track meter readings
@@ -23,6 +25,7 @@ A comprehensive web-based rental management system built with Flask, designed to
 - **System Settings**: Configure electricity rates and rent due dates
 
 ### Key Capabilities
+
 - **Multi-format Exports**: Excel, PDF, and ZIP downloads
 - **Payment Tracking**: Comprehensive payment history with filtering
 - **Document Verification**: Admin approval system for tenant documents
@@ -43,49 +46,56 @@ A comprehensive web-based rental management system built with Flask, designed to
 ## Installation
 
 ### Prerequisites
+
 - Python 3.8 or higher
 - pip (Python package installer)
 
 ### Setup Instructions
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/22f3000982/Rental_site.git
    cd Rental_site
    ```
 
 2. **Create virtual environment**
+
    ```bash
    python -m venv venv
-   
+
    # On Windows
    venv\Scripts\activate
-   
+
    # On macOS/Linux
    source venv/bin/activate
    ```
 
 3. **Install dependencies**
+
    ```bash
    cd backend
    pip install -r requirements.txt
    ```
 
 4. **Environment Configuration**
+
    ```bash
    # Copy the environment template
    cp .env.example .env
-   
+
    # Edit .env file with your configurations
    # Set SECRET_KEY, DATABASE_URL, etc.
    ```
 
 5. **Initialize Database**
+
    ```bash
    python -c "from app import app, db; app.app_context().push(); db.create_all(); print('Database initialized')"
    ```
 
 6. **Run the application**
+
    ```bash
    python app.py
    ```
@@ -97,6 +107,7 @@ A comprehensive web-based rental management system built with Flask, designed to
 ## Configuration
 
 ### Environment Variables
+
 Create a `.env` file in the backend directory with:
 
 ```env
@@ -106,6 +117,7 @@ FLASK_ENV=development
 ```
 
 ### Default Admin Account
+
 - **Email**: ashraj77777@gmail.com
 - **Password**: 4129
 - **Username**: admin
@@ -113,6 +125,7 @@ FLASK_ENV=development
 ## Usage
 
 ### For New Tenants
+
 1. Register an account on the platform
 2. Wait for admin approval
 3. Complete your profile information
@@ -120,6 +133,7 @@ FLASK_ENV=development
 5. Start making payments and downloading receipts
 
 ### For Administrators
+
 1. Login with admin credentials
 2. Approve new tenant registrations
 3. Add meter readings monthly
@@ -146,11 +160,13 @@ Rental_site/
 ## API Endpoints
 
 ### Authentication
+
 - `POST /register` - Register new tenant
 - `POST /login` - User login
 - `GET /logout` - User logout
 
 ### Tenant Routes
+
 - `GET /renter/dashboard` - Tenant dashboard
 - `GET /renter/payment_history_table` - Payment history with export
 - `GET /download/payment_data` - Export payment data to Excel
@@ -158,6 +174,7 @@ Rental_site/
 - `GET /download/payment_receipt/<id>/<type>` - Individual receipt download
 
 ### Admin Routes
+
 - `GET /admin/dashboard` - Admin dashboard
 - `GET /admin/pending_payments` - Payment verification
 - `POST /admin/verify_payment/<type>/<id>` - Verify payments
@@ -183,6 +200,7 @@ Rental_site/
 ## Database Schema
 
 The system uses SQLAlchemy ORM with the following main models:
+
 - **User**: Tenant and admin accounts
 - **RentPayment**: Monthly rent payment records
 - **ElectricityBill**: Electricity consumption and billing
@@ -202,6 +220,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Changelog
 
 ### Version 2.0
+
 - Added comprehensive export functionality (Excel, PDF, ZIP)
 - Implemented payment history table with filtering
 - Added document verification system
@@ -210,6 +229,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Added bulk download features
 
 ### Version 1.0
+
 - Initial release with basic rental management
 - Payment tracking and receipt upload
 - Admin verification system

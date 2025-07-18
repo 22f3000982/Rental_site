@@ -5,12 +5,14 @@
 ### Quick Setup (Recommended)
 
 **For Windows:**
+
 ```bash
 # Run the installation script
 install.bat
 ```
 
 **For macOS/Linux:**
+
 ```bash
 # Make the script executable
 chmod +x install.sh
@@ -22,35 +24,40 @@ chmod +x install.sh
 ### Manual Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/22f3000982/Rental_site.git
    cd Rental_site
    ```
 
 2. **Create virtual environment**
+
    ```bash
    python -m venv venv
-   
+
    # Windows
    venv\Scripts\activate
-   
+
    # macOS/Linux
    source venv/bin/activate
    ```
 
 3. **Install dependencies**
+
    ```bash
    cd backend
    pip install -r requirements.txt
    ```
 
 4. **Configure environment**
+
    ```bash
    cp .env.example .env
    # Edit .env with your settings
    ```
 
 5. **Initialize database**
+
    ```bash
    python -c "from app import app, db; app.app_context().push(); db.create_all()"
    ```
@@ -65,6 +72,7 @@ chmod +x install.sh
 ### Using Gunicorn (Recommended)
 
 1. **Install Gunicorn**
+
    ```bash
    pip install gunicorn
    ```
@@ -77,16 +85,17 @@ chmod +x install.sh
 ### Using Docker
 
 1. **Create Dockerfile**
+
    ```dockerfile
    FROM python:3.9-slim
 
    WORKDIR /app
    COPY backend/ .
-   
+
    RUN pip install -r requirements.txt
-   
+
    EXPOSE 5000
-   
+
    CMD ["python", "app.py"]
    ```
 
@@ -134,6 +143,7 @@ UPLOAD_FOLDER=/app/uploads
 ## Backup Strategy
 
 ### Database Backup
+
 ```bash
 # SQLite backup
 cp backend/instance/billing.db backup/billing_$(date +%Y%m%d).db
@@ -143,6 +153,7 @@ pg_dump rental_db > backup/rental_db_$(date +%Y%m%d).sql
 ```
 
 ### File Backup
+
 ```bash
 # Backup uploads
 tar -czf backup/uploads_$(date +%Y%m%d).tar.gz uploads/
@@ -151,11 +162,13 @@ tar -czf backup/uploads_$(date +%Y%m%d).tar.gz uploads/
 ## Monitoring
 
 ### Log Files
+
 - Application logs: Check Flask output
 - Error logs: Monitor for exceptions
 - Access logs: Track user activity
 
 ### Health Checks
+
 - Database connectivity
 - File system permissions
 - Memory usage
@@ -166,10 +179,12 @@ tar -czf backup/uploads_$(date +%Y%m%d).tar.gz uploads/
 ### Common Issues
 
 1. **Database not found**
+
    - Run database initialization script
    - Check file permissions
 
 2. **Upload errors**
+
    - Verify upload directory exists
    - Check file permissions
    - Validate file size limits

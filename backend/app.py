@@ -81,219 +81,16 @@ def migrate_database():
     """Migrate database to add new columns and tables"""
     try:
         with app.app_context():
-            engine = db.engine
-            with engine.connect() as connection:
-                # Use a transaction
-                with connection.begin() as trans:
-                    # 1. Handle 'user' table columns
-                    user_info = connection.execute(db.text("PRAGMA table_info(user)")).fetchall()
-                    user_columns = [info[1] for info in user_info]
-                    
-                    columns_to_add = {
-                        'created_at': 'DATETIME',
-                        'last_login': 'DATETIME',
-                        'full_name': 'VARCHAR(100)',
-                        'profile_picture': 'VARCHAR(255)',
-                        'address': 'TEXT',
-                        'emergency_contact_name': 'VARCHAR(100)',
-                        'emergency_contact_phone': 'VARCHAR(20)',
-                        'occupation': 'VARCHAR(100)',
-                        'aadhar_number': 'VARCHAR(20)',
-                        'pan_number': 'VARCHAR(20)',
-                        'profile_completion': 'INTEGER',
-                        'document_verification_status': 'VARCHAR(20)'
-                    }
-
-                    created_at_just_added = False
-                    for col, col_type in columns_to_add.items():
-                        if col not in user_columns:
-                            connection.execute(db.text(f'ALTER TABLE user ADD COLUMN {col} {col_type}'))
-                            print(f"Added column '{col}' to 'user' table.")
-                            if col == 'created_at':
-                                created_at_just_added = True
-                    
-                    # Set default for created_at for existing users if it was just added
-                    if created_at_just_added:
-                        connection.execute(db.text("UPDATE user SET created_at = :now WHERE created_at IS NULL"), {'now': datetime.utcnow()})
-                        print("Set default 'created_at' for existing users.")
-
-                    # 2. Handle 'notification' table columns
-                    notif_info = connection.execute(db.text("PRAGMA table_info(notification)")).fetchall()
-                    notif_columns = [info[1] for info in notif_info]
-
-                    if 'email_sent' not in notif_columns:
-                        connection.execute(db.text('ALTER TABLE notification ADD COLUMN email_sent BOOLEAN'))
-                        connection.execute(db.text('UPDATE notification SET email_sent = 0'))
-                        print("Added and updated 'email_sent' in 'notification' table.")
-
-                    if 'email_sent_at' not in notif_columns:
-                        connection.execute(db.text('ALTER TABLE notification ADD COLUMN email_sent_at DATETIME'))
-                        print("Added 'email_sent_at' to 'notification' table.")
-
-                    if 'enable_chat' not in notif_columns:
-                        connection.execute(db.text('ALTER TABLE notification ADD COLUMN enable_chat BOOLEAN'))
-                        connection.execute(db.text('UPDATE notification SET enable_chat = 0'))
-                        print("Added and updated 'enable_chat' in 'notification' table.")
-
-                    # 3. Handle 'document' table columns and renter_id -> user_id migration
-                    doc_info = connection.execute(db.text("PRAGMA table_info(document)")).fetchall()
-                    doc_columns = [info[1] for info in doc_info]
-
-                    # First add user_id if it doesn't exist
-                    if 'user_id' not in doc_columns:
-                        connection.execute(db.text('ALTER TABLE document ADD COLUMN user_id INTEGER'))
-                        print("Added column 'user_id' to 'document' table.")
-                    
-                    # Copy data from renter_id to user_id if both exist and user_id is empty
-                    if 'renter_id' in doc_columns and 'user_id' in doc_columns:
-                        connection.execute(db.text('UPDATE document SET user_id = renter_id WHERE user_id IS NULL'))
-                        print("Migrated data from 'renter_id' to 'user_id' in 'document' table.")
-                    
-                    # Add other new columns
-                    doc_columns_to_add = {
-                        'filename': 'VARCHAR(255)',
-                        'original_filename': 'VARCHAR(255)',
-                        'file_size': 'INTEGER',
-                        'mime_type': 'VARCHAR(100)',
-                        'verification_status': 'VARCHAR(20) DEFAULT "pending"',
-                        'verified_by': 'INTEGER',
-                        'verified_at': 'DATETIME',
-                        'admin_notes': 'TEXT',
-                        'uploaded_at': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
-                        'is_active': 'BOOLEAN DEFAULT 1'
-                    }
-
-                    for col, col_type in doc_columns_to_add.items():
-                        if col not in doc_columns:
-                            try:
-                                connection.execute(db.text(f'ALTER TABLE document ADD COLUMN {col} {col_type}'))
-                                print(f"Added column '{col}' to 'document' table.")
-                            except Exception as e:
-                                print(f"Could not add column '{col}': {e}")
-                    
-                    # Update file_path column name if old filename exists and new doesn't
-                    if 'filename' in doc_columns and 'file_path' not in doc_columns:
-                        # Note: SQLite doesn't support renaming columns directly in older versions
-                        # We'll handle this by updating our code to use the existing column
-                        print("Note: 'filename' column exists, will map to 'file_path' in application code.")
-                    
-                    # Finally, for existing documents that may have NULL user_id, populate from renter_id
-                    if 'renter_id' in doc_columns:
-                        connection.execute(db.text('UPDATE document SET user_id = renter_id WHERE user_id IS NULL AND renter_id IS NOT NULL'))
-                        print("Final migration: ensured all documents have user_id populated.")
-                    
-                    # Handle renter_id NOT NULL constraint issue
-                    # SQLite doesn't support dropping NOT NULL constraints, so we need to recreate the table
-                    if 'renter_id' in doc_columns:
-                        print("Migrating document table to remove renter_id NOT NULL constraint...")
-                        try:
-                            # Create a new table without renter_id NOT NULL constraint
-                            connection.execute(db.text('''
-                                CREATE TABLE document_new (
-                                    id INTEGER PRIMARY KEY,
-                                    user_id INTEGER NOT NULL,
-                                    document_type VARCHAR(50) NOT NULL,
-                                    filename VARCHAR(255),
-                                    original_filename VARCHAR(255),
-                                    file_path VARCHAR(500),
-                                    file_size INTEGER,
-                                    mime_type VARCHAR(100),
-                                    verification_status VARCHAR(20) DEFAULT 'pending',
-                                    verified_by INTEGER,
-                                    verified_at DATETIME,
-                                    admin_notes TEXT,
-                                    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                    is_active BOOLEAN DEFAULT 1,
-                                    renter_id INTEGER,
-                                    FOREIGN KEY (user_id) REFERENCES user (id),
-                                    FOREIGN KEY (verified_by) REFERENCES user (id)
-                                )
-                            '''))
-                            
-                            # Copy data from old table to new table
-                            connection.execute(db.text('''
-                                INSERT INTO document_new (
-                                    id, user_id, document_type, filename, original_filename, 
-                                    file_path, file_size, mime_type, verification_status, 
-                                    verified_by, verified_at, admin_notes, uploaded_at, 
-                                    is_active, renter_id
-                                )
-                                SELECT 
-                                    id, 
-                                    COALESCE(user_id, renter_id) as user_id,
-                                    document_type,
-                                    filename,
-                                    original_filename,
-                                    COALESCE(file_path, filename) as file_path,
-                                    file_size,
-                                    mime_type,
-                                    COALESCE(verification_status, 'pending') as verification_status,
-                                    verified_by,
-                                    verified_at,
-                                    admin_notes,
-                                    COALESCE(uploaded_at, datetime('now')) as uploaded_at,
-                                    COALESCE(is_active, 1) as is_active,
-                                    renter_id
-                                FROM document
-                            '''))
-                            
-                            # Drop old table and rename new table
-                            connection.execute(db.text('DROP TABLE document'))
-                            connection.execute(db.text('ALTER TABLE document_new RENAME TO document'))
-                            
-                            print("Successfully migrated document table structure.")
-                            
-                        except Exception as e:
-                            print(f"Document table migration failed: {e}")
-                            # If migration fails, at least ensure existing data has user_id populated
-                            if 'user_id' in doc_columns and 'renter_id' in doc_columns:
-                                connection.execute(db.text('UPDATE document SET user_id = renter_id WHERE user_id IS NULL AND renter_id IS NOT NULL'))
-                                print("Ensured user_id is populated from renter_id for existing records.")
-                    
-                    # Handle profile picture documents - mark them as inactive since they no longer need verification
-                    try:
-                        profile_pics_updated = connection.execute(db.text(
-                            "UPDATE document SET is_active = 0 WHERE document_type = 'profile_picture'"
-                        )).rowcount
-                        if profile_pics_updated > 0:
-                            print(f"Marked {profile_pics_updated} profile picture documents as inactive (no longer need verification).")
-                    except Exception as e:
-                        print(f"Could not update profile picture documents: {e}")
-                    
-                    # 6. Handle 'rent_payment' table columns for payment verification
-                    rent_payment_info = connection.execute(db.text("PRAGMA table_info(rent_payment)")).fetchall()
-                    rent_payment_columns = [info[1] for info in rent_payment_info]
-                    
-                    rent_payment_cols_to_add = {
-                        'payment_receipt': 'VARCHAR(255)',
-                        'payment_status': 'VARCHAR(20)',
-                        'verification_date': 'DATETIME',
-                        'verified_by': 'INTEGER',
-                        'verification_notes': 'TEXT'
-                    }
-                    
-                    for col, col_type in rent_payment_cols_to_add.items():
-                        if col not in rent_payment_columns:
-                            if col == 'verified_by':
-                                connection.execute(db.text(f'ALTER TABLE rent_payment ADD COLUMN {col} {col_type} REFERENCES user(id)'))
-                            else:
-                                connection.execute(db.text(f'ALTER TABLE rent_payment ADD COLUMN {col} {col_type}'))
-                            print(f"Added column '{col}' to 'rent_payment' table.")
-                    
-                    # Set default payment_status for existing rent payments
-                    if 'payment_status' not in rent_payment_columns:
-                        connection.execute(db.text("UPDATE rent_payment SET payment_status = 'unpaid' WHERE payment_status IS NULL"))
-                        print("Set default 'payment_status' for existing rent payments.")
-                
-                print("Database migration transaction committed.")
-
-            # Create any tables that might be missing entirely
-            db.create_all()
-            print("db.create_all() check complete.")
-
+            # For PostgreSQL, we just ensure all tables exist
+            # SQLAlchemy will handle the schema creation
+            print("Running database migration for PostgreSQL...")
+            
+            # The db.create_all() already handles creating all tables
+            # with the correct schema from models.py
+            
+            print("Database migration completed successfully")
     except Exception as e:
         print(f"Database migration error: {e}")
-        db.session.rollback()
 
 def create_default_settings():
     """Create default system settings"""
@@ -357,6 +154,31 @@ def create_monthly_rent_payment(renter, month, year):
         db.session.add(rent_payment)
         return rent_payment
     return existing_payment
+
+# Initialize database tables and default data
+def init_database():
+    """Initialize database tables and create default data"""
+    try:
+        with app.app_context():
+            # Create all tables
+            db.create_all()
+            print("Database tables created successfully")
+            
+            # Run migrations
+            migrate_database()
+            
+            # Create default settings
+            create_default_settings()
+            
+            # Create default admin user
+            create_admin_user()
+            
+            print("Database initialization completed")
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+
+# Call init_database when the app starts
+init_database()
 
 @app.route('/')
 def index():
