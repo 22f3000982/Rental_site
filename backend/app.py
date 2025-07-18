@@ -15,7 +15,20 @@ from forms import (RegistrationForm, LoginForm, MeterReadingForm, RentAssignment
 import json
 import io
 import zipfile
-import pandas as pd
+
+# Optional imports for Excel functionality
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+
+try:
+    import openpyxl
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
+
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib import colors
@@ -921,6 +934,10 @@ def generate_individual_receipt(payment, payment_type):
 # --- Helper functions for export functionality ---
 def generate_payment_data_excel(user):
     """Generate Excel file with all payment data for a user"""
+    if not PANDAS_AVAILABLE or not OPENPYXL_AVAILABLE:
+        flash('Excel export functionality is not available. Please use PDF export instead.', 'warning')
+        return redirect(url_for('renter_dashboard'))
+    
     buffer = io.BytesIO()
     
     # Get user's payment data
@@ -1052,6 +1069,10 @@ def generate_receipts_zip(user):
 
 def generate_reading_excel(readings, user):
     """Generate Excel file with meter readings"""
+    if not PANDAS_AVAILABLE or not OPENPYXL_AVAILABLE:
+        flash('Excel export functionality is not available. Please use PDF export instead.', 'warning')
+        return redirect(url_for('renter_dashboard'))
+    
     buffer = io.BytesIO()
     
     if readings:
@@ -1136,6 +1157,10 @@ def generate_reading_pdf(readings, user):
 
 def export_renter_payment_table_excel(payment_records, user, year_filter=None, month_filter=None):
     """Export renter payment table to Excel"""
+    if not PANDAS_AVAILABLE or not OPENPYXL_AVAILABLE:
+        flash('Excel export functionality is not available. Please use PDF export instead.', 'warning')
+        return redirect(url_for('renter_dashboard'))
+    
     buffer = io.BytesIO()
     
     # Create DataFrame
