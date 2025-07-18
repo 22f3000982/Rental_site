@@ -65,8 +65,8 @@ def create_admin_user():
     """Create default admin user"""
     admin = User.query.filter_by(email='ashraj77777@gmail.com').first()
     if not admin:
-        # Get admin password from environment variable, default to a secure password
-        admin_password = os.environ.get('ADMIN_PASSWORD', 'AdminPass@2025!')
+        # Get admin password from environment variable, default to simple password
+        admin_password = os.environ.get('ADMIN_PASSWORD', '4129')
         
         admin = User(
             username='admin',
