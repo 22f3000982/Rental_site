@@ -65,17 +65,20 @@ def create_admin_user():
     """Create default admin user"""
     admin = User.query.filter_by(email='ashraj77777@gmail.com').first()
     if not admin:
+        # Get admin password from environment variable, default to a secure password
+        admin_password = os.environ.get('ADMIN_PASSWORD', 'AdminPass@2025!')
+        
         admin = User(
             username='admin',
             email='ashraj77777@gmail.com',
-            password_hash=generate_password_hash('4129'),
-            password_plain='4129',
+            password_hash=generate_password_hash(admin_password),
+            password_plain=admin_password,
             is_admin=True,
             is_approved=True  # Admin is auto-approved
         )
         db.session.add(admin)
         db.session.commit()
-        print("Default admin user created")
+        print("Admin user initialized successfully")
 
 def migrate_database():
     """Migrate database to add new columns and tables"""

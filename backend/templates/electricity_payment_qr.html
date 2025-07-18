@@ -104,17 +104,12 @@
                     </div>
 
                     <div class="row mt-4">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <button id="manual-confirm" class="btn btn-success btn-lg">
                                 <i class="fas fa-check"></i> I've Completed Payment
                             </button>
                         </div>
-                        <div class="col-md-4">
-                            <button id="simulate-payment" class="btn btn-warning btn-lg">
-                                <i class="fas fa-flash"></i> Simulate Payment (Test)
-                            </button>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <a href="{{ url_for('pay_electricity_bill', bill_id=bill.id) }}" class="btn btn-secondary btn-lg">
                                 <i class="fas fa-arrow-left"></i> Back
                             </a>
@@ -217,43 +212,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('manual-confirm').addEventListener('click', function() {
         // Redirect to receipt upload page
         window.location.href = '{{ url_for("upload_payment_receipt", bill_id=bill.id) }}';
-    });
-    
-    // Simulate payment button (for testing)
-    document.getElementById('simulate-payment').addEventListener('click', function() {
-        this.disabled = true;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        
-        fetch('/api/simulate_payment/{{ bill.id }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                document.getElementById('payment-status').style.display = 'block';
-                document.getElementById('payment-status').innerHTML = 
-                    '<i class="fas fa-check-circle text-success"></i> <strong>Payment Successful!</strong><br>Redirecting to dashboard...';
-                document.getElementById('payment-status').className = 'alert alert-success';
-                
-                // Auto-redirect after 2 seconds
-                setTimeout(() => {
-                    window.location.href = '/renter/dashboard';
-                }, 2000);
-            } else {
-                alert('Error: ' + data.message);
-                this.disabled = false;
-                this.innerHTML = '<i class="fas fa-flash"></i> Simulate Payment (Test)';
-            }
-        })
-        .catch(error => {
-            console.error('Error simulating payment:', error);
-            alert('Error simulating payment');
-            this.disabled = false;
-            this.innerHTML = '<i class="fas fa-flash"></i> Simulate Payment (Test)';
-        });
     });
     
     // Focus detection (when user returns from UPI app)
