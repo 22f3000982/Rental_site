@@ -1602,6 +1602,17 @@ def admin_reading_history():
     # Get readings ordered by date (most recent first)
     readings = query.order_by(MeterReading.year.desc(), MeterReading.month.desc()).all()
     
+    # Group readings by renter for template
+    readings_by_renter = {}
+    for reading in readings:
+        renter_id = reading.renter_id
+        if renter_id not in readings_by_renter:
+            readings_by_renter[renter_id] = {
+                'renter': reading.renter,
+                'readings': []
+            }
+        readings_by_renter[renter_id]['readings'].append(reading)
+    
     # Get all active renters for filter dropdown
     renters = User.query.filter_by(is_admin=False, is_active=True).order_by(User.username).all()
     
@@ -1614,6 +1625,7 @@ def admin_reading_history():
     
     return render_template('admin_reading_history.html', 
                          readings=readings,
+                         readings_by_renter=readings_by_renter,
                          renters=renters,
                          years=years,
                          renter_filter=renter_filter,
