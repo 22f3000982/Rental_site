@@ -218,7 +218,9 @@ def register():
             password_plain=form.password.data,  # Store plain password (as per requirement)
             phone=form.phone.data,
             room_number=form.room_number.data,
-            rent_amount=0.0  # Will be set by admin
+            rent_amount=0.0,  # Will be set by admin
+            is_approved=True,  # Auto-approve for testing (remove this in production)
+            is_active=True     # Auto-activate for testing
         )
         db.session.add(user)
         db.session.commit()
