@@ -3,6 +3,298 @@
 {% block title %}Renter Dashboard - Rent & Billing System{% endblock %}
 
 {% block content %}
+<!-- Professional Custom Styles for Simple Dashboard -->
+<style>
+    .professional-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(8px);
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .professional-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+    }
+
+    .professional-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+        background-size: 200% 100%;
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0%, 100% { background-position: 200% 0; }
+        50% { background-position: -200% 0; }
+    }
+
+    .status-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .status-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        transform: rotate(45deg);
+    }
+
+    .payment-status-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1rem;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+    }
+
+    .metric-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #4CAF50, #2196F3, #FF9800, #E91E63);
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .metric-label {
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.85rem;
+    }
+
+    .premium-button {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .premium-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .premium-button:hover::before {
+        left: 100%;
+    }
+
+    .premium-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-left: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: 3px solid white;
+        box-shadow: 0 0 0 3px #f8f9fa;
+    }
+
+    .timeline-item::after {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 1.5rem;
+        width: 2px;
+        height: calc(100% + 0.5rem);
+        background: linear-gradient(180deg, #667eea, transparent);
+    }
+
+    .timeline-item:last-child::after {
+        display: none;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .progress-ring {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .progress-ring svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+
+    .progress-ring-circle {
+        fill: transparent;
+        stroke: #e0e0e0;
+        stroke-width: 8;
+        stroke-linecap: round;
+    }
+
+    .progress-ring-progress {
+        fill: transparent;
+        stroke: url(#gradient);
+        stroke-width: 8;
+        stroke-linecap: round;
+        stroke-dasharray: 314;
+        stroke-dashoffset: 314;
+        transition: stroke-dashoffset 1s ease-in-out;
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px;
+        padding: 3rem 2rem;
+        color: white;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="20" cy="80" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="2" fill="rgba(255,255,255,0.1)"/></svg>');
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .dark-mode .professional-card {
+        background: rgba(55, 65, 81, 0.95);
+        border: 1px solid rgba(75, 85, 99, 0.3);
+    }
+
+    .dark-mode .metric-card {
+        background: rgba(55, 65, 81, 0.95);
+        border: 1px solid rgba(75, 85, 99, 0.3);
+    }
+
+    .dark-mode .glass-card {
+        background: rgba(55, 65, 81, 0.95);
+        border: 1px solid rgba(75, 85, 99, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 2rem 1rem;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+        }
+        
+        .payment-status-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
 <!-- Success Messages -->
 <div id="success-messages">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -19,13 +311,533 @@
     {% endwith %}
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>
-        <i class="fas fa-tachometer-alt me-2"></i>
-        Welcome, {{ current_user.username }}!
-    </h2>
-    <span class="badge bg-primary">Room {{ current_user.room_number }}</span>
+<!-- Professional Header -->
+<div class="hero-section">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold mb-3">
+                <i class="fas fa-home me-3"></i>
+                Welcome back, {{ current_user.username }}!
+            </h1>
+            <p class="lead mb-4">Your personal rental management dashboard</p>
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <div class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                    <i class="fas fa-door-open me-2"></i>Room {{ current_user.room_number }}
+                </div>
+                <div class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                    <i class="fas fa-clock me-2"></i>{{ current_ist_time.strftime('%I:%M %p') }}
+                </div>
+                <div class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                    <i class="fas fa-calendar me-2"></i>{{ current_ist_time.strftime('%d %b %Y') }}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <!-- Dashboard Mode Toggle -->
+            <div class="btn-group shadow-lg" role="group" aria-label="Dashboard Mode">
+                <a href="{{ url_for('renter_dashboard', mode='complex') }}" 
+                   class="btn {% if dashboard_mode == 'complex' %}btn-light{% else %}btn-outline-light{% endif %}">
+                    <i class="fas fa-th-large me-2"></i>Advanced
+                </a>
+                <a href="{{ url_for('renter_dashboard', mode='simple') }}" 
+                   class="btn {% if dashboard_mode == 'simple' %}btn-light{% else %}btn-outline-light{% endif %}">
+                    <i class="fas fa-mobile-alt me-2"></i>Simple
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
+
+{% if dashboard_mode == 'simple' %}
+<!-- ENHANCED SIMPLE MODE VIEW -->
+
+<!-- Quick Metrics Overview -->
+<div class="row g-4 mb-5">
+    <div class="col-lg-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-value">{{ rent_summary.total_paid_months if rent_summary else 0 }}</div>
+            <div class="metric-label">Rent Payments</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-value">{{ electricity_summary.total_paid_bills if electricity_summary else 0 }}</div>
+            <div class="metric-label">Electric Bills</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-value">₹{{ "%.0f"|format(total_due) }}</div>
+            <div class="metric-label">Outstanding</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-value">{{ "%.1f"|format(electricity_summary.total_units_paid if electricity_summary else 0) }}</div>
+            <div class="metric-label">Units Paid Till</div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Payment Status Cards -->
+<div class="row g-4 mb-5">
+    <!-- Rent Payment Status -->
+    <div class="col-lg-6">
+        <div class="professional-card h-100">
+            <div class="status-card">
+                <div class="payment-status-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <h3 class="text-center mb-3">Rent Payment Status</h3>
+                
+                {% if rent_summary and rent_summary.last_paid_month %}
+                <div class="text-center mb-4">
+                    <div class="h4 mb-2">
+                        <i class="fas fa-check-circle me-2"></i>
+                        {{ calendar.month_name[rent_summary.last_paid_month] }} {{ rent_summary.last_paid_year }}
+                    </div>
+                    <p class="mb-0 opacity-75">Last Payment: ₹{{ "%.2f"|format(rent_summary.last_paid_amount) }}</p>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h5 mb-1">{{ rent_summary.total_paid_months }}</div>
+                        <small class="opacity-75">Payments Made</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h5 mb-1">
+                            {% if rent_payment %}
+                                {% if rent_payment.is_paid %}
+                                    <span class="badge bg-light text-success px-3">Paid</span>
+                                {% elif rent_payment.payment_status == 'pending' %}
+                                    <span class="badge bg-light text-warning px-3">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-light text-danger px-3">Due</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-light text-secondary px-3">N/A</span>
+                            {% endif %}
+                        </div>
+                        <small class="opacity-75">Current Status</small>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3 opacity-75"></i>
+                    <h5>No Rent Payments Yet</h5>
+                    <p class="mb-0 opacity-75">Contact admin for rent assignment</p>
+                </div>
+                {% endif %}
+                
+                {% if rent_payment and not rent_payment.is_paid and rent_payment.payment_status != 'pending' %}
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('pay_bill', payment_type='rent', payment_id=rent_payment.id) }}" 
+                       class="premium-button">
+                        <i class="fas fa-credit-card me-2"></i>Pay ₹{{ "%.2f"|format(rent_payment.amount) }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Electricity Payment Status -->
+    <div class="col-lg-6">
+        <div class="professional-card h-100">
+            <div class="status-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="payment-status-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="text-center mb-3">Electricity Status</h3>
+                
+                {% if electricity_summary and electricity_summary.last_paid_month %}
+                <div class="text-center mb-4">
+                    <div class="h4 mb-2">
+                        <i class="fas fa-check-circle me-2"></i>
+                        {{ calendar.month_name[electricity_summary.last_paid_month] }} {{ electricity_summary.last_paid_year }}
+                    </div>
+                    <p class="mb-0 opacity-75">Last Bill: ₹{{ "%.2f"|format(electricity_summary.last_paid_amount) }}</p>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h5 mb-1">{{ "%.1f"|format(electricity_summary.total_units_paid) }}</div>
+                        <small class="opacity-75">Units Paid Till</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h5 mb-1">
+                            {% if electricity_bill %}
+                                {% if electricity_bill.is_paid %}
+                                    <span class="badge bg-light text-success px-3">Paid</span>
+                                {% else %}
+                                    <span class="badge bg-light text-warning px-3">{{ "%.1f"|format(electricity_bill.units_consumed) }} Units Due</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-light text-secondary px-3">No Reading</span>
+                            {% endif %}
+                        </div>
+                        <small class="opacity-75">Current Status</small>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3 opacity-75"></i>
+                    <h5>No Bills Paid Yet</h5>
+                    <p class="mb-0 opacity-75">Waiting for meter reading</p>
+                </div>
+                {% endif %}
+                
+                {% if electricity_bill and not electricity_bill.is_paid %}
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('pay_electricity_bill', bill_id=electricity_bill.id) }}" 
+                       class="premium-button">
+                        <i class="fas fa-bolt me-2"></i>Pay ₹{{ "%.2f"|format(electricity_bill.remaining_amount) }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Outstanding Payments Section -->
+{% if total_due > 0 %}
+<div class="professional-card mb-5">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="notification-badge">!</div>
+                    <h4 class="mb-0 ms-3">Outstanding Payments</h4>
+                </div>
+                <p class="text-muted mb-3">You have pending payments totaling ₹{{ "%.2f"|format(total_due) }}</p>
+                <div class="row g-3">
+                    {% if rent_payment and not rent_payment.is_paid and rent_payment.payment_status != 'pending' %}
+                    <div class="col-md-6">
+                        <a href="{{ url_for('pay_bill', payment_type='rent', payment_id=rent_payment.id) }}" 
+                           class="premium-button w-100 text-center text-decoration-none">
+                            <i class="fas fa-home me-2"></i>Pay Rent - ₹{{ "%.2f"|format(rent_payment.amount) }}
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if electricity_bill and not electricity_bill.is_paid %}
+                    <div class="col-md-6">
+                        <a href="{{ url_for('pay_electricity_bill', bill_id=electricity_bill.id) }}" 
+                           class="premium-button w-100 text-center text-decoration-none"
+                           style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                            <i class="fas fa-bolt me-2"></i>Pay Electric - ₹{{ "%.2f"|format(electricity_bill.remaining_amount) }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <div class="progress-ring">
+                    <svg>
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#667eea"/>
+                                <stop offset="100%" style="stop-color:#f093fb"/>
+                            </linearGradient>
+                        </defs>
+                        <circle class="progress-ring-circle" cx="60" cy="60" r="50"></circle>
+                        <circle class="progress-ring-progress" cx="60" cy="60" r="50" 
+                                style="stroke-dashoffset: {{ 314 - (314 * (total_due / 10000)) }}"></circle>
+                    </svg>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <div class="h4 mb-0">₹{{ "%.0f"|format(total_due) }}</div>
+                        <small class="text-muted">Due</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="glass-card mb-5">
+    <div class="card-body text-center py-5">
+        <div class="payment-status-icon mx-auto mb-4" style="background: linear-gradient(135deg, #4CAF50, #45a049);">
+            <i class="fas fa-check-double"></i>
+        </div>
+        <h3 class="text-success mb-3">All Payments Up to Date!</h3>
+        <p class="text-muted mb-0">Excellent! You have no outstanding payments.</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Enhanced Recent Notifications -->
+{% if notifications %}
+<div class="professional-card mb-5">
+    <div class="card-header border-0 bg-transparent pb-0">
+        <h4><i class="fas fa-bell me-2"></i>Recent Updates</h4>
+    </div>
+    <div class="card-body">
+        <div class="timeline">
+            {% for notification in notifications[:5] %}
+            <div class="timeline-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">{{ notification.notification_type.replace('_', ' ').title() }}</h6>
+                        <p class="text-muted mb-2">{{ notification.message }}</p>
+                    </div>
+                    <small class="text-muted">{{ notification.created_at.strftime('%d %b') }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if notifications|length > 5 %}
+        <div class="text-center mt-4">
+            <a href="{{ url_for('renter_notifications') }}" class="premium-button">
+                <i class="fas fa-eye me-2"></i>View All Notifications
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Enhanced Payment History -->
+{% if payment_history %}
+<div class="professional-card">
+    <div class="card-header border-0 bg-transparent pb-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4><i class="fas fa-history me-2"></i>Payment History</h4>
+            <span class="badge bg-primary">{{ payment_history|length }} Records</span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                    <tr>
+                        <th class="border-0 ps-4">Date</th>
+                        <th class="border-0">Period</th>
+                        <th class="border-0">Amount</th>
+                        <th class="border-0">Upto Units Paid</th>
+                        <th class="border-0">Status</th>
+                        <th class="border-0 pe-4">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in payment_history %}
+                    <tr class="border-0">
+                        <td class="ps-4 py-3">
+                            <small class="text-muted">{{ record.date }}</small>
+                        </td>
+                        <td class="py-3">
+                            <strong>{{ record.month_year }}</strong>
+                        </td>
+                        <td class="py-3">
+                            <span class="badge bg-success px-3">₹{{ "%.2f"|format(record.amount) }}</span>
+                        </td>
+                        <td class="py-3">
+                            <span class="text-muted">{{ "%.1f"|format(record.units) }} units</span>
+                        </td>
+                        <td class="py-3">
+                            <span class="badge bg-light text-success">{{ record.status }}</span>
+                        </td>
+                        <td class="pe-4 py-3">
+                            <div class="btn-group" role="group">
+                                {% if record.rent_id %}
+                                <a href="{{ url_for('generate_receipt', payment_type='rent', payment_id=record.rent_id) }}" 
+                                   class="btn btn-outline-primary btn-sm" title="Download Rent Receipt">
+                                    <i class="fas fa-home"></i>
+                                </a>
+                                {% endif %}
+                                {% if record.electricity_id %}
+                                <a href="{{ url_for('generate_receipt', payment_type='electricity', payment_id=record.electricity_id) }}" 
+                                   class="btn btn-outline-info btn-sm" title="Download Electricity Receipt">
+                                    <i class="fas fa-bolt"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if payment_history|length == 0 %}
+        <div class="text-center py-5">
+            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No payment history available yet</h5>
+            <p class="text-muted">Your payment records will appear here</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Professional JavaScript Enhancements -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate metric cards on load
+    const metricCards = document.querySelectorAll('.metric-card');
+    metricCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // Animate professional cards
+    const professionalCards = document.querySelectorAll('.professional-card');
+    professionalCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, (index + 4) * 150);
+    });
+
+    // Animate metric values
+    const metricValues = document.querySelectorAll('.metric-value');
+    metricValues.forEach(value => {
+        const finalValue = parseFloat(value.textContent.replace(/[₹,]/g, '')) || parseInt(value.textContent) || 0;
+        let currentValue = 0;
+        const increment = finalValue / 30;
+        const timer = setInterval(() => {
+            currentValue += increment;
+            if (currentValue >= finalValue) {
+                clearInterval(timer);
+                if (value.textContent.includes('₹')) {
+                    value.textContent = '₹' + finalValue.toFixed(0);
+                } else {
+                    value.textContent = Math.round(finalValue);
+                }
+            } else {
+                if (value.textContent.includes('₹')) {
+                    value.textContent = '₹' + Math.round(currentValue);
+                } else {
+                    value.textContent = Math.round(currentValue);
+                }
+            }
+        }, 50);
+    });
+
+    // Add hover effects to premium buttons
+    const premiumButtons = document.querySelectorAll('.premium-button');
+    premiumButtons.forEach(button => {
+        button.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-3px) scale(1.02)';
+            this.style.boxShadow = '0 12px 30px rgba(102, 126, 234, 0.4)';
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(-2px) scale(1)';
+            this.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.3)';
+        });
+    });
+
+    // Add ripple effect to cards
+    professionalCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const ripple = document.createElement('div');
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            ripple.style.position = 'absolute';
+            ripple.style.borderRadius = '50%';
+            ripple.style.background = 'rgba(255, 255, 255, 0.1)';
+            ripple.style.transform = 'scale(0)';
+            ripple.style.animation = 'ripple 0.6s linear';
+            ripple.style.left = x - 25 + 'px';
+            ripple.style.top = y - 25 + 'px';
+            ripple.style.width = '50px';
+            ripple.style.height = '50px';
+            ripple.style.pointerEvents = 'none';
+            
+            this.style.position = 'relative';
+            this.style.overflow = 'hidden';
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+
+    // Real-time clock update
+    function updateClock() {
+        const now = new Date();
+        const timeElements = document.querySelectorAll('[data-time]');
+        timeElements.forEach(el => {
+            el.textContent = now.toLocaleTimeString('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true,
+                timeZone: 'Asia/Kolkata'
+            });
+        });
+    }
+    
+    // Update clock every second
+    setInterval(updateClock, 1000);
+
+    // Progressive loading effect
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Observe timeline items
+    const timelineItems = document.querySelectorAll('.timeline-item');
+    timelineItems.forEach((item, index) => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+        item.style.transition = 'all 0.6s ease';
+        item.style.transitionDelay = index * 100 + 'ms';
+        observer.observe(item);
+    });
+});
+
+// CSS Animation Keyframes
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes ripple {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .fade-in {
+        animation: slideInUp 0.8s ease-out;
+    }
+`;
+document.head.appendChild(style);
+</script>
+
+{% else %}
+<!-- COMPLEX MODE VIEW (Original Dashboard) -->
 
 <!-- Current Month Summary -->
 <div class="row mb-4 g-3">
@@ -285,7 +1097,7 @@
                         <thead>
                             <tr>
                                 <th>Month</th>
-                                <th>Units</th>
+                                <th>Upto Units Paid</th>
                                 <th>Amount</th>
                                 <th>Status</th>
                                 <th>Action</th>
@@ -416,5 +1228,6 @@
     });
 </script>
 {% endblock %}
+{% endif %}
 {% endif %}
 {% endblock %}

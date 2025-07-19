@@ -272,9 +272,17 @@ def renter_dashboard():
     if current_user.is_admin:
         return redirect(url_for('admin_dashboard'))
     
+    # Get dashboard mode (complex/simple)
+    dashboard_mode = request.args.get('mode', 'complex')
+    
     # Get current month data
     current_month = datetime.now().month
     current_year = datetime.now().year
+    
+    # Get current IST time (GMT+5:30)
+    from datetime import timezone, timedelta
+    ist_timezone = timezone(timedelta(hours=5, minutes=30))
+    current_ist_time = datetime.now(ist_timezone)
     
     # Get rent payment for current month
     rent_payment = RentPayment.query.filter_by(
@@ -294,8 +302,141 @@ def renter_dashboard():
     rent_payments = RentPayment.query.filter_by(renter_id=current_user.id).order_by(RentPayment.year.desc(), RentPayment.month.desc()).limit(12).all()
     electricity_bills = ElectricityBill.query.filter_by(renter_id=current_user.id).order_by(ElectricityBill.year.desc(), ElectricityBill.month.desc()).limit(12).all()
     
-    # Get notifications
-    notifications = Notification.query.filter_by(renter_id=current_user.id, is_read=False).order_by(Notification.created_at.desc()).limit(5).all()
+    # For simple mode, calculate payment summaries
+    rent_summary = None
+    electricity_summary = None
+    
+    if dashboard_mode == 'simple':
+        # Calculate rent payment summary (last paid month)
+        last_paid_rent = RentPayment.query.filter_by(
+            renter_id=current_user.id,
+            is_paid=True
+        ).order_by(RentPayment.year.desc(), RentPayment.month.desc()).first()
+        
+        # Calculate electricity payment summary (last paid units)
+        last_paid_electricity = ElectricityBill.query.filter_by(
+            renter_id=current_user.id,
+            is_paid=True
+        ).order_by(ElectricityBill.year.desc(), ElectricityBill.month.desc()).first()
+        
+        rent_summary = {
+            'last_paid_month': last_paid_rent.month if last_paid_rent else None,
+            'last_paid_year': last_paid_rent.year if last_paid_rent else None,
+            'last_paid_amount': last_paid_rent.amount if last_paid_rent else 0,
+            'total_paid_months': RentPayment.query.filter_by(renter_id=current_user.id, is_paid=True).count()
+        }
+        
+        electricity_summary = {
+            'last_paid_month': last_paid_electricity.month if last_paid_electricity else None,
+            'last_paid_year': last_paid_electricity.year if last_paid_electricity else None,
+            'last_paid_units': last_paid_electricity.units_consumed if last_paid_electricity else 0,
+            'last_paid_amount': last_paid_electricity.total_amount if last_paid_electricity else 0,
+            'total_paid_bills': ElectricityBill.query.filter_by(renter_id=current_user.id, is_paid=True).count(),
+            # Show the meter reading up to which the user has paid (current_reading of last paid bill)
+            'total_units_paid': (
+                float(last_paid_electricity.meter_reading.current_reading or 0) 
+                if last_paid_electricity and last_paid_electricity.meter_reading 
+                else (float(last_paid_electricity.units_consumed or 0) if last_paid_electricity else 0)
+            )
+        }
+        
+        # Get payment history for simple mode table
+        paid_rent_payments = RentPayment.query.filter_by(renter_id=current_user.id, is_paid=True)\
+            .order_by(RentPayment.payment_date.desc()).limit(10).all()
+        paid_electricity_bills = ElectricityBill.query.filter_by(renter_id=current_user.id, is_paid=True)\
+            .order_by(ElectricityBill.payment_date.desc()).limit(10).all()
+        
+        # Combine payment history for simple table
+        payment_history = []
+        
+        # Get all payments (both rent and electricity) and sort by date
+        all_payments = []
+        
+        # Add rent payments
+        for rent in paid_rent_payments:
+            # Find corresponding electricity bill for same month/year
+            electricity_for_month = None
+            for bill in paid_electricity_bills:
+                if bill.month == rent.month and bill.year == rent.year:
+                    electricity_for_month = bill
+                    break
+            
+            total_amount = float(rent.amount or 0)
+            if electricity_for_month:
+                total_amount += float(electricity_for_month.amount_paid or electricity_for_month.total_amount or 0)
+            
+            all_payments.append({
+                'date': rent.payment_date.strftime('%d-%m-%Y') if rent.payment_date else f"{rent.month:02d}-{rent.year}",
+                'month_year': f"{calendar.month_name[rent.month]} {rent.year}",
+                'amount': total_amount,
+                'units_consumed': float(electricity_for_month.units_consumed or 0) if electricity_for_month else 0,
+                'status': 'Paid',
+                'rent_id': rent.id,
+                'electricity_id': electricity_for_month.id if electricity_for_month else None,
+                'payment_date': rent.payment_date,
+                'month': rent.month,
+                'year': rent.year,
+                'sort_date': rent.payment_date or datetime(rent.year, rent.month, 1)
+            })
+        
+        # Add electricity bills that don't have corresponding rent payments
+        for bill in paid_electricity_bills:
+            # Check if already included
+            already_included = False
+            for payment in all_payments:
+                if payment['electricity_id'] == bill.id:
+                    already_included = True
+                    break
+            
+            if not already_included:
+                all_payments.append({
+                    'date': bill.payment_date.strftime('%d-%m-%Y') if bill.payment_date else f"{bill.month:02d}-{bill.year}",
+                    'month_year': f"{calendar.month_name[bill.month]} {bill.year}",
+                    'amount': float(bill.amount_paid or bill.total_amount or 0),
+                    'units_consumed': float(bill.units_consumed or 0),
+                    'status': 'Paid',
+                    'rent_id': None,
+                    'electricity_id': bill.id,
+                    'payment_date': bill.payment_date,
+                    'month': bill.month,
+                    'year': bill.year,
+                    'sort_date': bill.payment_date or datetime(bill.year, bill.month, 1)
+                })
+        
+        # Sort all payments by date (oldest first to calculate cumulative properly)
+        all_payments.sort(key=lambda x: x['sort_date'])
+        
+        # Calculate cumulative units for each payment
+        cumulative_units = 0
+        for payment in all_payments:
+            cumulative_units += payment['units_consumed']
+            payment['cumulative_units'] = cumulative_units
+        
+        # Sort by date (newest first for display)
+        all_payments.sort(key=lambda x: x['sort_date'], reverse=True)
+        
+        # Convert to the expected format
+        payment_history = []
+        for payment in all_payments:
+            payment_history.append({
+                'date': payment['date'],
+                'month_year': payment['month_year'],
+                'amount': payment['amount'],
+                'units': payment['cumulative_units'],  # Now shows true cumulative progression
+                'status': payment['status'],
+                'rent_id': payment['rent_id'],
+                'electricity_id': payment['electricity_id'],
+                'payment_date': payment['payment_date'],
+                'month': payment['month'],
+                'year': payment['year']
+            })
+        
+    else:
+        payment_history = []
+    
+    # Get notifications (limit to 3 for simple mode)
+    notification_limit = 3 if dashboard_mode == 'simple' else 5
+    notifications = Notification.query.filter_by(renter_id=current_user.id, is_read=False).order_by(Notification.created_at.desc()).limit(notification_limit).all()
     
     # Calculate total due
     total_due = Decimal('0')
@@ -312,7 +453,12 @@ def renter_dashboard():
                          notifications=notifications,
                          total_due=total_due,
                          current_month=current_month,
-                         current_year=current_year)
+                         current_year=current_year,
+                         dashboard_mode=dashboard_mode,
+                         current_ist_time=current_ist_time,
+                         rent_summary=rent_summary,
+                         electricity_summary=electricity_summary,
+                         payment_history=payment_history)
 
 @app.route('/renter/pay/<payment_type>/<int:payment_id>')
 @login_required
@@ -1137,6 +1283,9 @@ def user_profile():
     if current_user.is_admin:
         return redirect(url_for('admin_dashboard'))
     
+    # Get dashboard mode (for simple mode navigation)
+    dashboard_mode = request.args.get('mode', 'complex')
+    
     # Get or create user profile
     profile = UserProfile.query.filter_by(user_id=current_user.id).first()
     if not profile:
@@ -1154,7 +1303,8 @@ def user_profile():
                          user=current_user, 
                          profile=profile, 
                          documents=documents,
-                         completion_percentage=completion_percentage)
+                         completion_percentage=completion_percentage,
+                         dashboard_mode=dashboard_mode)
 
 @app.route('/profile/edit', methods=['GET', 'POST'])
 @login_required
@@ -1455,6 +1605,21 @@ def admin_dashboard():
     pending_rent_verifications = RentPayment.query.filter_by(payment_status='pending').count()
     pending_electricity_verifications = ElectricityBill.query.filter_by(payment_status='pending').count()
     
+    # Debug: Let's also check for any payments with receipts that might not be marked as pending
+    rent_with_receipts = RentPayment.query.filter(
+        RentPayment.payment_receipt.isnot(None),
+        RentPayment.is_paid == False
+    ).count()
+    electricity_with_receipts = ElectricityBill.query.filter(
+        ElectricityBill.payment_receipt.isnot(None),
+        ElectricityBill.is_paid == False
+    ).count()
+    
+    print(f"DEBUG DASHBOARD: Rent pending verifications: {pending_rent_verifications}")
+    print(f"DEBUG DASHBOARD: Electricity pending verifications: {pending_electricity_verifications}")
+    print(f"DEBUG DASHBOARD: Rent with receipts (unpaid): {rent_with_receipts}")
+    print(f"DEBUG DASHBOARD: Electricity with receipts (unpaid): {electricity_with_receipts}")
+    
     # Get pending document verifications count
     pending_document_verifications = Document.query.filter_by(
         verification_status='pending',
@@ -1609,9 +1774,43 @@ def admin_reading_history():
         if renter_id not in readings_by_renter:
             readings_by_renter[renter_id] = {
                 'renter': reading.renter,
-                'readings': []
+                'readings': [],
+                'total_units_consumed': 0,
+                'total_units_paid': 0,
+                'total_amount_due': 0,
+                'total_amount_paid': 0
             }
-        readings_by_renter[renter_id]['readings'].append(reading)
+        
+        # Get corresponding electricity bill for this reading
+        electricity_bill = ElectricityBill.query.filter_by(
+            renter_id=reading.renter_id,
+            month=reading.month,
+            year=reading.year
+        ).first()
+        
+        # Calculate payment percentage
+        payment_percentage = 0
+        if electricity_bill and electricity_bill.total_amount > 0:
+            amount_paid = electricity_bill.amount_paid or 0
+            payment_percentage = min((amount_paid / electricity_bill.total_amount) * 100, 100)
+        
+        # Create reading data structure expected by template
+        reading_data = {
+            'reading': reading,
+            'bill': electricity_bill,
+            'payment_percentage': payment_percentage
+        }
+        readings_by_renter[renter_id]['readings'].append(reading_data)
+        
+        # Calculate totals for this renter
+        readings_by_renter[renter_id]['total_units_consumed'] += reading.units_consumed or 0
+        
+        if electricity_bill:
+            if electricity_bill.is_paid:
+                readings_by_renter[renter_id]['total_units_paid'] += reading.units_consumed or 0
+                readings_by_renter[renter_id]['total_amount_paid'] += electricity_bill.amount_paid or electricity_bill.total_amount or 0
+            else:
+                readings_by_renter[renter_id]['total_amount_due'] += electricity_bill.total_amount or 0
     
     # Get all active renters for filter dropdown
     renters = User.query.filter_by(is_admin=False, is_active=True).order_by(User.username).all()
@@ -1798,17 +1997,125 @@ def admin_pending_payments():
     if not current_user.is_admin:
         return redirect(url_for('renter_dashboard'))
     
-    # Get pending rent payments
+    # Get pending rent payments with detailed debugging
     pending_rent = RentPayment.query.filter_by(payment_status='pending')\
         .join(User, RentPayment.renter_id == User.id).order_by(RentPayment.payment_date.desc()).all()
     
-    # Get pending electricity payments
+    # Get pending electricity payments with detailed debugging
     pending_electricity = ElectricityBill.query.filter_by(payment_status='pending')\
         .join(User, ElectricityBill.renter_id == User.id).order_by(ElectricityBill.payment_date.desc()).all()
     
+    # Debug information - let's also check the counts
+    rent_pending_count = RentPayment.query.filter_by(payment_status='pending').count()
+    electricity_pending_count = ElectricityBill.query.filter_by(payment_status='pending').count()
+    
+    # Let's also check what statuses actually exist in the database
+    all_rent_statuses = db.session.query(RentPayment.payment_status).distinct().all()
+    all_electricity_statuses = db.session.query(ElectricityBill.payment_status).distinct().all()
+    
+    print(f"DEBUG: Rent pending count: {rent_pending_count}")
+    print(f"DEBUG: Electricity pending count: {electricity_pending_count}")
+    print(f"DEBUG: All rent statuses: {[status[0] for status in all_rent_statuses]}")
+    print(f"DEBUG: All electricity statuses: {[status[0] for status in all_electricity_statuses]}")
+    print(f"DEBUG: Pending rent records: {len(pending_rent)}")
+    print(f"DEBUG: Pending electricity records: {len(pending_electricity)}")
+    
     return render_template('admin_pending_payments.html',
-                         pending_rent=pending_rent,
-                         pending_electricity=pending_electricity)
+                         pending_rent_payments=pending_rent,
+                         pending_electricity_payments=pending_electricity,
+                         rent_pending_count=rent_pending_count,
+                         electricity_pending_count=electricity_pending_count)
+
+@app.route('/admin/debug_payments')
+@login_required
+def debug_payments():
+    """Debug route to check payment data"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    # Get all rent payments with their statuses
+    all_rent = RentPayment.query.join(User).all()
+    all_electricity = ElectricityBill.query.join(User).all()
+    
+    rent_data = []
+    for payment in all_rent:
+        rent_data.append({
+            'id': payment.id,
+            'renter': payment.renter.username,
+            'amount': payment.amount,
+            'month': payment.month,
+            'year': payment.year,
+            'is_paid': payment.is_paid,
+            'payment_status': payment.payment_status,
+            'payment_receipt': payment.payment_receipt,
+            'payment_date': payment.payment_date
+        })
+    
+    electricity_data = []
+    for bill in all_electricity:
+        electricity_data.append({
+            'id': bill.id,
+            'renter': bill.renter.username,
+            'amount': bill.total_amount,
+            'month': bill.month,
+            'year': bill.year,
+            'is_paid': bill.is_paid,
+            'payment_status': bill.payment_status,
+            'payment_receipt': bill.payment_receipt,
+            'payment_date': bill.payment_date
+        })
+    
+    return {
+        'rent_payments': rent_data,
+        'electricity_bills': electricity_data,
+        'summary': {
+            'total_rent_payments': len(rent_data),
+            'total_electricity_bills': len(electricity_data),
+            'rent_pending_status': len([r for r in rent_data if r['payment_status'] == 'pending']),
+            'electricity_pending_status': len([e for e in electricity_data if e['payment_status'] == 'pending']),
+            'rent_with_receipts': len([r for r in rent_data if r['payment_receipt'] is not None]),
+            'electricity_with_receipts': len([e for e in electricity_data if e['payment_receipt'] is not None])
+        }
+    }
+
+@app.route('/admin/create_test_payment')
+@login_required  
+def create_test_payment():
+    """Create a test pending payment for debugging"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    try:
+        # Find a non-admin user to create test payment for
+        renter = User.query.filter_by(is_admin=False).first()
+        if not renter:
+            return jsonify({'error': 'No renter found'})
+        
+        # Create a test rent payment with pending status
+        test_payment = RentPayment(
+            renter_id=renter.id,
+            amount=5000.00,
+            month=7,  # July
+            year=2025,
+            is_paid=True,
+            payment_status='pending',
+            payment_method='UPI',
+            transaction_id='TEST123456',
+            payment_date=datetime.utcnow(),
+            payment_receipt='test_receipt.pdf'
+        )
+        
+        db.session.add(test_payment)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Test payment created for {renter.username}',
+            'payment_id': test_payment.id
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)})
 
 @app.route('/admin/verify_payment/<payment_type>/<int:payment_id>', methods=['POST'])
 @login_required
@@ -1937,6 +2244,95 @@ def edit_electricity_bill(bill_id):
         return redirect(url_for('view_renter', renter_id=bill.renter_id))
     
     return render_template('edit_electricity_bill.html', bill=bill)
+
+@app.route('/admin/delete_electricity_bill/<int:bill_id>', methods=['POST'])
+@login_required
+def delete_electricity_bill(bill_id):
+    """Delete electricity bill"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    bill = ElectricityBill.query.get_or_404(bill_id)
+    renter_id = bill.renter_id
+    
+    # Create notification for user
+    notification = Notification(
+        renter_id=renter_id,
+        message=f"Electricity Bill Deleted: Your electricity bill for {calendar.month_name[bill.month]} {bill.year} has been deleted by admin.",
+        notification_type='bill_update'
+    )
+    db.session.add(notification)
+    
+    # Delete the bill
+    db.session.delete(bill)
+    db.session.commit()
+    
+    flash('Electricity bill deleted successfully!', 'success')
+    return redirect(request.referrer or url_for('admin_bills'))
+
+@app.route('/admin/auto_generate_bills', methods=['GET', 'POST'])
+@login_required
+def auto_generate_bills():
+    """Auto-generate monthly bills for all active renters"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    if request.method == 'POST':
+        # Get the month and year from form
+        month = request.form.get('month', type=int)
+        year = request.form.get('year', type=int)
+        
+        if not month or not year:
+            flash('Please select a valid month and year.', 'error')
+            return redirect(url_for('auto_generate_bills'))
+        
+        # Get all active and approved renters
+        renters = User.query.filter_by(is_admin=False, is_active=True, is_approved=True).all()
+        
+        if not renters:
+            flash('No active renters found to generate bills for.', 'warning')
+            return redirect(url_for('admin_monthly_report'))
+        
+        generated_count = 0
+        skipped_count = 0
+        
+        try:
+            for renter in renters:
+                # Create monthly rent payment if it doesn't exist
+                existing_rent = RentPayment.query.filter_by(
+                    renter_id=renter.id,
+                    month=month,
+                    year=year
+                ).first()
+                
+                if not existing_rent:
+                    create_monthly_rent_payment(renter, month, year)
+                    generated_count += 1
+                else:
+                    skipped_count += 1
+                
+                # Note: Electricity bills are typically generated when meter readings are added
+                # So we only auto-generate rent payments here
+            
+            db.session.commit()
+            
+            if generated_count > 0:
+                flash(f'Successfully generated {generated_count} rent bills for {calendar.month_name[month]} {year}. '
+                      f'{skipped_count} bills already existed.', 'success')
+            else:
+                flash(f'All rent bills for {calendar.month_name[month]} {year} already exist.', 'info')
+                
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error generating bills: {str(e)}', 'error')
+        
+        return redirect(url_for('admin_monthly_report'))
+    
+    # GET request - show form
+    current_date = datetime.now()
+    return render_template('auto_generate_bills.html', 
+                         current_month=current_date.month,
+                         current_year=current_date.year)
 
 @app.route('/admin/user_payment_history')
 @login_required
@@ -2100,6 +2496,158 @@ def add_meter_reading():
         return redirect(url_for('admin_dashboard'))
     
     return render_template('add_meter_reading.html', form=form)
+
+@app.route('/admin/get_previous_reading/<int:renter_id>')
+@login_required
+def get_previous_reading(renter_id):
+    """Get the previous meter reading for a specific renter"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    # Get the most recent meter reading for this renter
+    previous_reading = MeterReading.query.filter_by(
+        renter_id=renter_id
+    ).order_by(MeterReading.year.desc(), MeterReading.month.desc()).first()
+    
+    if previous_reading:
+        return jsonify({
+            'previous_reading': previous_reading.current_reading,
+            'month': previous_reading.month,
+            'year': previous_reading.year
+        })
+    else:
+        return jsonify({
+            'previous_reading': 0,
+            'month': None,
+            'year': None
+        })
+
+@app.route('/generate_receipt/<payment_type>/<int:payment_id>')
+@login_required
+def generate_receipt(payment_type, payment_id):
+    """Generate and download payment receipt"""
+    import io
+    import calendar
+    
+    # Check authorization
+    if payment_type == 'rent':
+        payment = RentPayment.query.get_or_404(payment_id)
+        if not current_user.is_admin and payment.renter_id != current_user.id:
+            flash('Unauthorized access.', 'error')
+            return redirect(url_for('renter_dashboard'))
+        
+        if not payment.is_paid:
+            flash('Receipt can only be generated for paid payments.', 'error')
+            return redirect(url_for('renter_dashboard'))
+            
+        # Get user info
+        user = User.query.get(payment.renter_id)
+        
+    elif payment_type == 'electricity':
+        payment = ElectricityBill.query.get_or_404(payment_id)
+        if not current_user.is_admin and payment.renter_id != current_user.id:
+            flash('Unauthorized access.', 'error')
+            return redirect(url_for('renter_dashboard'))
+            
+        if not payment.is_paid:
+            flash('Receipt can only be generated for paid bills.', 'error')
+            return redirect(url_for('renter_dashboard'))
+            
+        # Get user info
+        user = User.query.get(payment.renter_id)
+    else:
+        flash('Invalid payment type.', 'error')
+        return redirect(url_for('renter_dashboard'))
+    
+    # Generate PDF receipt
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    
+    # Header
+    c.setFont("Helvetica-Bold", 20)
+    c.drawString(200, height - 50, "Payment Receipt")
+    
+    # Receipt details
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(50, height - 100, "Receipt Details:")
+    
+    c.setFont("Helvetica", 11)
+    y_position = height - 120
+    
+    # Common details
+    c.drawString(50, y_position, f"Receipt ID: {payment_type.upper()}-{payment.id}")
+    y_position -= 20
+    c.drawString(50, y_position, f"Date: {payment.payment_date.strftime('%d-%m-%Y %I:%M %p') if payment.payment_date else 'N/A'}")
+    y_position -= 20
+    c.drawString(50, y_position, f"Renter: {user.username} (Room {user.room_number})")
+    y_position -= 20
+    c.drawString(50, y_position, f"Period: {calendar.month_name[payment.month]} {payment.year}")
+    y_position -= 20
+    
+    if payment_type == 'rent':
+        c.drawString(50, y_position, f"Rent Amount: ₹{payment.amount}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Payment Method: {payment.payment_method or 'Cash'}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Transaction ID: {payment.transaction_id or 'N/A'}")
+        y_position -= 30
+        
+        # Payment summary
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, y_position, "Payment Summary:")
+        c.setFont("Helvetica", 11)
+        y_position -= 20
+        c.drawString(50, y_position, f"Total Amount Paid: ₹{payment.amount}")
+        
+    elif payment_type == 'electricity':
+        c.drawString(50, y_position, f"Units Consumed: {payment.units_consumed}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Rate per Unit: ₹{payment.rate_per_unit}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Fixed Charges: ₹{payment.fixed_charge}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Total Bill: ₹{payment.total_amount}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Amount Paid: ₹{payment.amount_paid or payment.total_amount}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Payment Method: {payment.payment_method or 'Cash'}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Transaction ID: {payment.transaction_id or 'N/A'}")
+        y_position -= 30
+        
+        # Payment summary
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, y_position, "Bill Summary:")
+        c.setFont("Helvetica", 11)
+        y_position -= 20
+        c.drawString(50, y_position, f"Units: {payment.units_consumed} × ₹{payment.rate_per_unit} = ₹{payment.units_consumed * payment.rate_per_unit}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Fixed Charges: ₹{payment.fixed_charge}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Total Amount Paid: ₹{payment.amount_paid or payment.total_amount}")
+    
+    # Footer
+    y_position -= 40
+    c.setFont("Helvetica", 10)
+    c.drawString(50, y_position, f"Generated on: {datetime.now().strftime('%d-%m-%Y %I:%M %p')}")
+    y_position -= 15
+    c.drawString(50, y_position, "This is a computer generated receipt.")
+    
+    # Add a border
+    c.rect(30, 30, width - 60, height - 60)
+    
+    c.save()
+    buffer.seek(0)
+    
+    filename = f"{payment_type}_receipt_{payment.month:02d}_{payment.year}_{user.username}.pdf"
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/pdf"
+    )
 
 @app.route('/admin/settings', methods=['GET', 'POST'])
 @login_required

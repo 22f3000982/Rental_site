@@ -69,13 +69,15 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <form method="POST" action="{{ url_for('approve_payment', payment_type='rent', payment_id=payment.id) }}" style="display: inline;">
+                                                <form method="POST" action="{{ url_for('verify_payment', payment_type='rent', payment_id=payment.id) }}" style="display: inline;">
+                                                    <input type="hidden" name="action" value="approve">
                                                     <button type="submit" class="btn btn-sm btn-success"
                                                            onclick="return confirm('Are you sure you want to approve this rent payment?')">
                                                         <i class="fas fa-check"></i> Approve
                                                     </button>
                                                 </form>
-                                                <form method="POST" action="{{ url_for('reject_payment', payment_type='rent', payment_id=payment.id) }}" style="display: inline;">
+                                                <form method="POST" action="{{ url_for('verify_payment', payment_type='rent', payment_id=payment.id) }}" style="display: inline;">
+                                                    <input type="hidden" name="action" value="reject">
                                                     <button type="submit" class="btn btn-sm btn-danger"
                                                            onclick="return confirm('Are you sure you want to reject this rent payment?')">
                                                         <i class="fas fa-times"></i> Reject
@@ -171,13 +173,15 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <form method="POST" action="{{ url_for('approve_payment', payment_type='electricity', payment_id=payment.id) }}" style="display: inline;">
+                                                <form method="POST" action="{{ url_for('verify_payment', payment_type='electricity', payment_id=payment.id) }}" style="display: inline;">
+                                                    <input type="hidden" name="action" value="approve">
                                                     <button type="submit" class="btn btn-sm btn-success"
                                                            onclick="return confirm('Are you sure you want to approve this electricity payment?')">
                                                         <i class="fas fa-check"></i> Approve
                                                     </button>
                                                 </form>
-                                                <form method="POST" action="{{ url_for('reject_payment', payment_type='electricity', payment_id=payment.id) }}" style="display: inline;">
+                                                <form method="POST" action="{{ url_for('verify_payment', payment_type='electricity', payment_id=payment.id) }}" style="display: inline;">
+                                                    <input type="hidden" name="action" value="reject">
                                                     <button type="submit" class="btn btn-sm btn-danger"
                                                            onclick="return confirm('Are you sure you want to reject this electricity payment?')">
                                                         <i class="fas fa-times"></i> Reject
