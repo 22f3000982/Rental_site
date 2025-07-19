@@ -334,6 +334,20 @@ def pay_bill(payment_type, payment_id):
                          payment=payment, 
                          payment_type=payment_type)
 
+@app.route('/renter/pay_electricity_bill/<int:bill_id>')
+@login_required  
+def pay_electricity_bill(bill_id):
+    """Pay electricity bill - redirect to generic payment page"""
+    if current_user.is_admin:
+        return redirect(url_for('admin_dashboard'))
+    
+    bill = ElectricityBill.query.get_or_404(bill_id)
+    if bill.renter_id != current_user.id:
+        flash('Unauthorized access.', 'error')
+        return redirect(url_for('renter_dashboard'))
+    
+    return redirect(url_for('pay_bill', payment_type='electricity', payment_id=bill_id))
+
 @app.route('/renter/confirm_payment/<payment_type>/<int:payment_id>', methods=['POST'])
 @login_required
 def confirm_payment(payment_type, payment_id):
@@ -2730,6 +2744,13 @@ def chat_conversation(conversation_id):
     """View specific chat conversation"""
     # For now, just render the template with a basic conversation structure
     return render_template('chat_conversation.html', conversation_id=conversation_id)
+
+@app.route('/api/chat/unread_count')
+@login_required
+def chat_unread_count():
+    """Get unread message count for current user"""
+    # For now, return 0 - this can be expanded later
+    return jsonify({'unread_count': 0})
 
 if __name__ == '__main__':
     with app.app_context():
