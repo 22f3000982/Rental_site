@@ -1553,15 +1553,15 @@ def verify_document(document_id):
     form = DocumentVerificationForm()
     
     if form.validate_on_submit():
-        document.verification_status = form.status.data
-        document.admin_notes = form.admin_notes.data
+        document.verification_status = form.verification_status.data
+        document.admin_notes = form.verification_notes.data
         document.verified_by = current_user.id
         document.verified_at = datetime.utcnow()
         
         # Create notification for user
-        notification_message = f"Document Verification: Your {document.document_type.replace('_', ' ').title()} document has been {form.status.data}."
-        if form.admin_notes.data:
-            notification_message += f" Note: {form.admin_notes.data}"
+        notification_message = f"Document Verification: Your {document.document_type.replace('_', ' ').title()} document has been {form.verification_status.data}."
+        if form.verification_notes.data:
+            notification_message += f" Note: {form.verification_notes.data}"
             
         notification = Notification(
             renter_id=document.user_id,
@@ -1571,7 +1571,7 @@ def verify_document(document_id):
         db.session.add(notification)
         
         db.session.commit()
-        flash(f'Document {form.status.data} successfully!', 'success')
+        flash(f'Document {form.verification_status.data} successfully!', 'success')
         return redirect(url_for('admin_documents'))
     
     return render_template('verify_document.html', document=document, form=form)
