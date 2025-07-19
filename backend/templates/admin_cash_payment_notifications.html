@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Cash Payment Notifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-money-bill-wave me-2"></i>Cash Payment Notifications</h1>
+                <a href="{{ url_for('admin_historical_data') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if notifications %}
+        <div class="row">
+            {% for notification in notifications %}
+                <div class="col-12 mb-3">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-money-bill text-success me-2"></i>
+                                Cash Payment Notification
+                                {% if not notification.is_read %}
+                                    <span class="badge bg-danger ms-2">New</span>
+                                {% endif %}
+                            </h6>
+                            <small class="text-muted">
+                                {{ notification.created_at.strftime('%d %B %Y at %I:%M %p') }}
+                            </small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">{{ notification.message }}</pre>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-success btn-sm" onclick="markAsRead({{ notification.id }})">
+                                            <i class="fas fa-check me-1"></i>Mark as Read
+                                        </button>
+                                        <button class="btn btn-primary btn-sm" onclick="createPaymentFromNotification({{ notification.id }})">
+                                            <i class="fas fa-plus me-1"></i>Create Payment Record
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteNotification({{ notification.id }})">
+                                            <i class="fas fa-trash me-1"></i>Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <h5><i class="fas fa-info-circle me-2"></i>No Cash Payment Notifications</h5>
+                    <p class="mb-0">There are currently no cash payment notifications from renters.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>For Rent Payments:</h6>
+                            <p class="small">Use the "Create Payment Record" button or manually add through:</p>
+                            <a href="{{ url_for('admin_historical_rent_payment') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-home me-1"></i>Add Rent Payment
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>For Electricity Payments:</h6>
+                            <p class="small">Use the "Create Payment Record" button or manually add through:</p>
+                            <a href="{{ url_for('admin_historical_electricity_payment') }}" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-bolt me-1"></i>Add Electricity Payment
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function markAsRead(notificationId) {
+    fetch(`/admin/mark_notification_read/${notificationId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error marking notification as read');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error marking notification as read');
+    });
+}
+
+function createPaymentFromNotification(notificationId) {
+    if (confirm('This will help you create a payment record based on this notification. Continue?')) {
+        // For now, redirect to historical data page
+        // In the future, this could pre-populate a form with notification data
+        window.location.href = '{{ url_for("admin_historical_data") }}';
+    }
+}
+
+function deleteNotification(notificationId) {
+    if (confirm('Are you sure you want to delete this notification? This action cannot be undone.')) {
+        fetch(`/admin/delete_notification/${notificationId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting notification');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting notification');
+        });
+    }
+}
+</script>
+{% endblock %}

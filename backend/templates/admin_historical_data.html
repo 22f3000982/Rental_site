@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Historical Data Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-history me-2"></i>Historical Data Management</h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-home me-2"></i>Historical Rent Payments</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Add past rent payments for renters who have been living here before registering in the system.</p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>Add payments from previous months/years</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Specify payment method (Cash, UPI, etc.)</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Add transaction reference</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Include notes for record keeping</li>
+                    </ul>
+                    <a href="{{ url_for('admin_historical_rent_payment') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add Historical Rent Payment
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Historical Electricity Payments</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Add past electricity bills and payments with meter readings from before system registration.</p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>Add meter readings and bills</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Specify units consumed and rates</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Record payment details</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Maintain continuous meter history</li>
+                    </ul>
+                    <a href="{{ url_for('admin_historical_electricity_payment') }}" class="btn btn-warning">
+                        <i class="fas fa-plus me-1"></i>Add Historical Electricity Payment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-money-bill me-2"></i>Cash Payment Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">View and manage cash payment notifications from renters.</p>
+                    <a href="{{ url_for('admin_cash_payment_notifications') }}" class="btn btn-info">
+                        <i class="fas fa-eye me-1"></i>View Cash Payment Notifications
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6><i class="fas fa-info-circle me-2"></i>Important Notes:</h6>
+                <ul class="mb-0">
+                    <li>Historical data should be added in chronological order for accurate meter reading progression</li>
+                    <li>Ensure payment dates reflect the actual payment dates from the past</li>
+                    <li>All historical payments will be marked as "approved" and "paid" automatically</li>
+                    <li>Use this feature only for legitimate past payments with proper documentation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

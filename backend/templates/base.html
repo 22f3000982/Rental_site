@@ -1372,6 +1372,9 @@
                                     <a class="nav-link {{ 'active' if request.endpoint == 'admin_reading_history' }}" href="{{ url_for('admin_reading_history') }}">
                                         <i class="fas fa-history me-2"></i>Reading History
                                     </a>
+                                    <a class="nav-link {{ 'active' if request.endpoint in ['admin_historical_data', 'admin_historical_rent_payment', 'admin_historical_electricity_payment', 'admin_cash_payment_notifications'] }}" href="{{ url_for('admin_historical_data') }}">
+                                        <i class="fas fa-database me-2"></i>Historical Data
+                                    </a>
                                     <a class="nav-link {{ 'active' if request.endpoint == 'admin_payment_history' }}" href="{{ url_for('admin_payment_history') }}">
                                         <i class="fas fa-table me-2"></i>Payment History
                                     </a>
@@ -1405,6 +1408,12 @@
                                     <a class="nav-link" href="{{ url_for('renter_payment_receipts') }}">
                                         <i class="fas fa-table me-2"></i>Payment History
                                     </a>
+                                    <a class="nav-link" href="{{ url_for('renter_cash_payment') }}">
+                                        <i class="fas fa-money-bill-wave me-2"></i>Cash Payment
+                                    </a>
+                                    <a class="nav-link" href="{{ url_for('renter_cash_payment') }}">
+                                        <i class="fas fa-money-bill-wave me-2"></i>Cash Payment
+                                    </a>
                                     <a class="nav-link" href="{{ url_for('chat_dashboard') }}">
                                         <i class="fas fa-comments me-2"></i>Chat
                                         <span id="renter-chat-badge" class="badge bg-danger ms-1" style="display: none;">0</span>
@@ -1412,6 +1421,9 @@
                                     {% else %}
                                     <a class="nav-link" href="{{ url_for('user_profile', mode='simple') }}">
                                         <i class="fas fa-user me-2"></i>My Profile
+                                    </a>
+                                    <a class="nav-link" href="{{ url_for('renter_cash_payment') }}">
+                                        <i class="fas fa-money-bill-wave me-2"></i>Cash Payment
                                     </a>
                                     {% endif %}
                                 {% endif %}

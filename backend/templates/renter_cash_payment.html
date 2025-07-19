@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Cash Payment Notification{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-money-bill-wave me-2"></i>Cash Payment Notification</h1>
+                <a href="{{ url_for('renter_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-hand-holding-usd me-2"></i>Report Cash Payment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>How it works:</h6>
+                        <ul class="mb-0">
+                            <li>Use this form to notify the admin about cash payments you've made</li>
+                            <li>The admin will verify your payment and update the records</li>
+                            <li>Keep your receipt safe as proof of payment</li>
+                            <li>Your payment status will be updated within 24 hours</li>
+                        </ul>
+                    </div>
+
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.payment_type.id }}" class="form-label">{{ form.payment_type.label.text }}</label>
+                                {{ form.payment_type(class="form-select", required=True) }}
+                                {% if form.payment_type.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.payment_type.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.amount.id }}" class="form-label">{{ form.amount.label.text }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    {{ form.amount(class="form-control", step="0.01", required=True) }}
+                                </div>
+                                {% if form.amount.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.amount.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.payment_date.id }}" class="form-label">{{ form.payment_date.label.text }}</label>
+                                {{ form.payment_date(class="form-control", required=True) }}
+                                {% if form.payment_date.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.payment_date.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.receipt_number.id }}" class="form-label">{{ form.receipt_number.label.text }}</label>
+                                {{ form.receipt_number(class="form-control", placeholder="Optional - if you have a receipt") }}
+                                {% if form.receipt_number.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.receipt_number.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12">
+                                <label for="{{ form.notes.id }}" class="form-label">{{ form.notes.label.text }}</label>
+                                {{ form.notes(class="form-control", rows="3", placeholder="Add any additional details about the payment (e.g., which month's rent, specific bill details, etc.)") }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.notes.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('renter_dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            {{ form.submit(class="btn btn-success") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="alert alert-warning mt-3">
+                <h6><i class="fas fa-exclamation-triangle me-2"></i>Remember:</h6>
+                <ul class="mb-0">
+                    <li>This is only a notification - your payment will be verified by the admin</li>
+                    <li>Keep your cash receipt or any proof of payment safe</li>
+                    <li>Make sure to specify which month/bill you're paying for in the notes</li>
+                    <li>You'll receive a confirmation once the admin verifies your payment</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

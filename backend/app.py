@@ -11,7 +11,8 @@ from models import db, User, MeterReading, ElectricityBill, RentPayment, SystemS
 from forms import (RegistrationForm, LoginForm, MeterReadingForm, RentAssignmentForm, 
                   SystemSettingsForm, PaymentForm, PasswordResetForm, 
                   NewPasswordForm, EditRenterForm, ChatMessageForm, UserProfileForm, 
-                  DocumentUploadForm, DocumentVerificationForm, ProfilePictureForm)
+                  DocumentUploadForm, DocumentVerificationForm, ProfilePictureForm,
+                  HistoricalRentPaymentForm, HistoricalElectricityPaymentForm, CashPaymentForm)
 import json
 import io
 import zipfile
@@ -63,14 +64,15 @@ def load_user(user_id):
 
 def create_admin_user():
     """Create default admin user"""
-    admin = User.query.filter_by(email='ashraj77777@gmail.com').first()
+    admin_email = os.environ.get('ADMIN_EMAIL', 'ashraj77777@gmail.com')
+    admin = User.query.filter_by(email=admin_email).first()
     if not admin:
         # Get admin password from environment variable, default to simple password
         admin_password = os.environ.get('ADMIN_PASSWORD', '4129')
         
         admin = User(
             username='admin',
-            email='ashraj77777@gmail.com',
+            email=admin_email,
             password_hash=generate_password_hash(admin_password),
             password_plain=admin_password,
             is_admin=True,
@@ -78,7 +80,9 @@ def create_admin_user():
         )
         db.session.add(admin)
         db.session.commit()
-        print("Admin user initialized successfully")
+        print(f"Admin user initialized successfully: {admin_email}")
+    else:
+        print(f"Admin user already exists: {admin_email}")
 
 def migrate_database():
     """Migrate database to add new columns and tables"""
@@ -899,6 +903,17 @@ def generate_individual_receipt(payment, payment_type):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
+    
+    # Get renter name for watermark
+    renter_name = getattr(payment, 'renter_name', None)
+    if not renter_name and hasattr(payment, 'renter_id'):
+        # Try to get renter from database
+        renter = User.query.get(payment.renter_id)
+        renter_name = renter.username if renter else 'Unknown'
+    
+    # Add watermark with renter name
+    add_watermark_to_canvas(c, width, height, renter_name)
+    
     c.setFont("Helvetica-Bold", 16)
     c.drawString(200, height - 50, "Payment Receipt")
     c.setFont("Helvetica", 12)
@@ -906,7 +921,7 @@ def generate_individual_receipt(payment, payment_type):
     c.drawString(50, height - 120, f"Payment Type: {payment_type}")
     c.drawString(50, height - 140, f"Amount: {getattr(payment, 'amount', getattr(payment, 'total_received', 'N/A'))}")
     c.drawString(50, height - 160, f"Date: {getattr(payment, 'payment_date', getattr(payment, 'date', 'N/A'))}")
-    c.drawString(50, height - 180, f"Renter: {getattr(payment, 'renter_name', getattr(payment, 'renter_id', 'N/A'))}")
+    c.drawString(50, height - 180, f"Renter: {renter_name or 'N/A'}")
     c.drawString(50, height - 200, f"Description: {getattr(payment, 'description', '')}")
     c.showPage()
     c.save()
@@ -2522,6 +2537,84 @@ def get_previous_reading(renter_id):
             'year': None
         })
 
+def add_watermark_to_canvas(canvas, width, height, renter_name=None):
+    """Add most cursive handwritten text watermark to PDF canvas"""
+    # Save current state
+    canvas.saveState()
+    
+    # Set watermark properties with perfect cursive appearance
+    canvas.setFillColorRGB(0.75, 0.75, 0.75)  # Optimal gray for cursive visibility
+    canvas.setStrokeColorRGB(0.75, 0.75, 0.75)
+    
+    # Rotate canvas for elegant diagonal watermark
+    canvas.rotate(45)
+    
+    # Calculate position for diagonal text
+    x_center = (width + height) / 2 - 200  # Adjust for rotation
+    y_center = (height - width) / 2 + 50   # Adjust for rotation
+    
+    # === MOST CURSIVE SIGNATURE DESIGN ===
+    
+    # Opening decorative flourish
+    canvas.setFont("ZapfDingbats", 10)
+    canvas.drawString(x_center - 145, y_center + 70, "❦")  # Elegant fleuron
+    
+    # Main cursive signature - "m_@ash" in MOST CURSIVE FONT
+    canvas.setFont("Times-Italic", 75)  # Largest size for maximum cursive impact
+    canvas.drawString(x_center - 135, y_center + 50, "m_@ash")
+    
+    # Closing decorative flourish
+    canvas.setFont("ZapfDingbats", 10)
+    canvas.drawString(x_center + 25, y_center + 60, "❦")  # Matching fleuron
+    
+    # Elegant hand-drawn underline flourish
+    canvas.setLineWidth(0.8)
+    canvas.line(x_center - 135, y_center + 45, x_center + 30, y_center + 45)
+    
+    # Small decorative dots for cursive enhancement
+    canvas.setFont("ZapfDingbats", 6)
+    canvas.drawString(x_center - 140, y_center + 48, "•")
+    canvas.drawString(x_center + 32, y_center + 48, "•")
+    
+    # Add renter name in elegant cursive style if provided
+    if renter_name:
+        canvas.setFont("Times-Italic", 38)  # Matching cursive font
+        canvas.drawString(x_center - 75, y_center + 5, f"✧ {renter_name} ✧")
+    
+    # Cursive style official text
+    canvas.setFont("Times-Italic", 24)
+    canvas.drawString(x_center - 95, y_center - 35, "• Official Receipt •")
+    
+    # Elegant cursive authorization text
+    canvas.setFont("Times-Italic", 18)
+    canvas.drawString(x_center - 115, y_center - 65, "⟨ Authorized Document ⟩")
+    
+    # Corner decorative elements for full cursive frame
+    canvas.setFont("ZapfDingbats", 8)
+    canvas.drawString(x_center - 155, y_center + 85, "✿")   # Top left
+    canvas.drawString(x_center + 45, y_center + 85, "✿")    # Top right
+    canvas.drawString(x_center - 155, y_center - 85, "✿")   # Bottom left
+    canvas.drawString(x_center + 45, y_center - 85, "✿")    # Bottom right
+    
+    # Additional cursive embellishments
+    canvas.setFont("ZapfDingbats", 6)
+    canvas.drawString(x_center - 125, y_center + 75, "◊")   # Small diamond accents
+    canvas.drawString(x_center + 15, y_center + 75, "◊")
+    
+    # Restore canvas state
+    canvas.restoreState()
+
+class WatermarkTemplate:
+    """Custom page template with watermark"""
+    def __init__(self, pagesize, renter_name=None):
+        self.pagesize = pagesize
+        self.renter_name = renter_name
+        
+    def __call__(self, canvas, doc):
+        """Called for each page"""
+        width, height = self.pagesize
+        add_watermark_to_canvas(canvas, width, height, self.renter_name)
+
 @app.route('/generate_receipt/<payment_type>/<int:payment_id>')
 @login_required
 def generate_receipt(payment_type, payment_id):
@@ -2563,6 +2656,9 @@ def generate_receipt(payment_type, payment_id):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
+    
+    # Add watermark with renter name
+    add_watermark_to_canvas(c, width, height, user.username)
     
     # Header
     c.setFont("Helvetica-Bold", 20)
@@ -2673,6 +2769,220 @@ def admin_settings():
         return redirect(url_for('admin_settings'))
     
     return render_template('admin_settings.html', form=form, settings=settings)
+
+@app.route('/admin/historical_data')
+@login_required
+def admin_historical_data():
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    return render_template('admin_historical_data.html')
+
+@app.route('/admin/historical_rent_payment', methods=['GET', 'POST'])
+@login_required
+def admin_historical_rent_payment():
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    form = HistoricalRentPaymentForm()
+    
+    # Populate renter choices
+    renters = User.query.filter_by(is_admin=False, is_approved=True).all()
+    form.renter_id.choices = [(r.id, f"{r.username} - Room {r.room_number}") for r in renters]
+    
+    if form.validate_on_submit():
+        # Check if payment already exists for this month/year
+        existing_payment = RentPayment.query.filter_by(
+            renter_id=form.renter_id.data,
+            month=form.month.data,
+            year=form.year.data
+        ).first()
+        
+        if existing_payment:
+            flash(f'Rent payment for {calendar.month_name[form.month.data]} {form.year.data} already exists!', 'error')
+            return render_template('admin_historical_rent_payment.html', form=form)
+        
+        # Create historical rent payment
+        payment = RentPayment(
+            renter_id=form.renter_id.data,
+            amount=form.amount.data,
+            month=form.month.data,
+            year=form.year.data,
+            due_date=date(form.year.data, form.month.data, 5),
+            payment_date=datetime.combine(form.payment_date.data, datetime.min.time()),
+            is_paid=True,
+            payment_method=form.payment_method.data,
+            transaction_id=form.transaction_id.data,
+            payment_status='approved',
+            verification_date=datetime.now(),
+            verified_by=current_user.id,
+            verification_notes=f"Historical data added by admin. {form.notes.data}" if form.notes.data else "Historical data added by admin."
+        )
+        
+        db.session.add(payment)
+        db.session.commit()
+        
+        renter = User.query.get(form.renter_id.data)
+        flash(f'Historical rent payment for {renter.username} - {calendar.month_name[form.month.data]} {form.year.data} added successfully!', 'success')
+        return redirect(url_for('admin_historical_data'))
+    
+    return render_template('admin_historical_rent_payment.html', form=form)
+
+@app.route('/admin/historical_electricity_payment', methods=['GET', 'POST'])
+@login_required
+def admin_historical_electricity_payment():
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    form = HistoricalElectricityPaymentForm()
+    
+    # Populate renter choices
+    renters = User.query.filter_by(is_admin=False, is_approved=True).all()
+    form.renter_id.choices = [(r.id, f"{r.username} - Room {r.room_number}") for r in renters]
+    
+    if form.validate_on_submit():
+        # Extract month and year from payment date
+        payment_date = form.payment_date.data
+        month = payment_date.month
+        year = payment_date.year
+        
+        # Check if meter reading already exists for this month/year
+        existing_reading = MeterReading.query.filter_by(
+            renter_id=form.renter_id.data,
+            month=month,
+            year=year
+        ).first()
+        
+        if existing_reading:
+            flash(f'Meter reading for {calendar.month_name[month]} {year} already exists!', 'error')
+            return render_template('admin_historical_electricity_payment.html', form=form)
+        
+        # Create historical meter reading
+        meter_reading = MeterReading(
+            renter_id=form.renter_id.data,
+            current_reading=form.current_reading.data,
+            previous_reading=form.previous_reading.data,
+            units_consumed=form.units_consumed.data,
+            month=month,
+            year=year,
+            reading_date=form.payment_date.data,
+            created_at=datetime.combine(form.payment_date.data, datetime.min.time())
+        )
+        
+        db.session.add(meter_reading)
+        db.session.flush()  # Get the ID
+        
+        # Create historical electricity bill
+        electricity_bill = ElectricityBill(
+            renter_id=form.renter_id.data,
+            meter_reading_id=meter_reading.id,
+            units_consumed=form.units_consumed.data,
+            rate_per_unit=form.rate_per_unit.data,
+            fixed_charge=0,  # Set to 0 since we removed this field
+            total_amount=form.total_amount.data,
+            month=month,
+            year=year,
+            is_paid=True,
+            payment_date=datetime.combine(form.payment_date.data, datetime.min.time()),
+            units_paid=form.units_consumed.data,
+            amount_paid=form.total_amount.data,
+            payment_method=form.payment_method.data,
+            transaction_id=None,  # Set to None since we removed this field
+            payment_status='approved',
+            verification_date=datetime.now(),
+            verified_by=current_user.id,
+            verification_notes=f"Historical data added by admin. {form.notes.data}" if form.notes.data else "Historical data added by admin.",
+            created_at=datetime.combine(form.payment_date.data, datetime.min.time())
+        )
+        
+        db.session.add(electricity_bill)
+        db.session.commit()
+        
+        renter = User.query.get(form.renter_id.data)
+        flash(f'Electricity payment record for {renter.username} - {calendar.month_name[month]} {year} added successfully!', 'success')
+        return redirect(url_for('admin_historical_data'))
+    
+    return render_template('admin_historical_electricity_payment.html', form=form)
+
+@app.route('/renter/cash_payment', methods=['GET', 'POST'])
+@login_required
+def renter_cash_payment():
+    if current_user.is_admin:
+        return redirect(url_for('admin_dashboard'))
+    
+    form = CashPaymentForm()
+    
+    if form.validate_on_submit():
+        # Create notification for admin about cash payment
+        payment_date = form.payment_date.data
+        amount = form.amount.data
+        payment_type = form.payment_type.data
+        
+        message = f"Cash payment notification from {current_user.username} (Room {current_user.room_number}):\n"
+        message += f"Payment Type: {payment_type.title()}\n"
+        message += f"Amount: ₹{amount}\n"
+        message += f"Payment Date: {payment_date.strftime('%d %B %Y')}\n"
+        
+        if form.receipt_number.data:
+            message += f"Receipt Number: {form.receipt_number.data}\n"
+        
+        if form.notes.data:
+            message += f"Notes: {form.notes.data}\n"
+        
+        message += "\nPlease verify and update the payment records."
+        
+        # Create notification for admin
+        notification = Notification(
+            renter_id=None,  # For admin
+            message=message,
+            notification_type='cash_payment',
+            enable_chat=True
+        )
+        
+        db.session.add(notification)
+        db.session.commit()
+        
+        flash('Cash payment notification sent to admin. Your payment will be verified and updated soon.', 'info')
+        return redirect(url_for('renter_dashboard'))
+    
+    return render_template('renter_cash_payment.html', form=form)
+
+@app.route('/admin/cash_payment_notifications')
+@login_required
+def admin_cash_payment_notifications():
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    # Get all cash payment notifications
+    notifications = Notification.query.filter_by(
+        notification_type='cash_payment'
+    ).order_by(Notification.created_at.desc()).all()
+    
+    return render_template('admin_cash_payment_notifications.html', notifications=notifications)
+
+@app.route('/admin/mark_notification_read/<int:notification_id>', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'error': 'Access denied'})
+    
+    notification = Notification.query.get_or_404(notification_id)
+    notification.is_read = True
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+@app.route('/admin/delete_notification/<int:notification_id>', methods=['POST'])
+@login_required
+def delete_notification(notification_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'error': 'Access denied'})
+    
+    notification = Notification.query.get_or_404(notification_id)
+    db.session.delete(notification)
+    db.session.commit()
+    
+    return jsonify({'success': True})
 
 @app.route('/admin/approve_renter/<int:renter_id>')
 @login_required
@@ -3067,6 +3377,25 @@ def export_payment_table_pdf(payment_records, year_filter, month_filter, renter_
     if filter_info:
         title_text += f" ({', '.join(filter_info)})"
     
+    # Title
+    styles = getSampleStyleSheet()
+    title_style = styles['Title']
+    title_style.alignment = 1  # Center alignment
+    
+    filter_info = []
+    if year_filter:
+        filter_info.append(f"Year: {year_filter}")
+    if month_filter:
+        filter_info.append(f"Month: {calendar.month_name[month_filter]}")
+    if renter_filter:
+        renter = User.query.get(renter_filter)
+        if renter:
+            filter_info.append(f"Renter: {renter.username}")
+    
+    title_text = "Payment History Table"
+    if filter_info:
+        title_text += f" ({', '.join(filter_info)})"
+    
     title = Paragraph(title_text, title_style)
     elements.append(title)
     elements.append(Spacer(1, 12))
@@ -3117,8 +3446,9 @@ def export_payment_table_pdf(payment_records, year_filter, month_filter, renter_
     summary = Paragraph(summary_text, summary_style)
     elements.append(summary)
     
-    # Build PDF
-    doc.build(elements)
+    # Build PDF with watermark
+    watermark_template = WatermarkTemplate(A4, "Admin")
+    doc.build(elements, onFirstPage=watermark_template, onLaterPages=watermark_template)
     buffer.seek(0)
     
     # Generate filename
@@ -3272,8 +3602,9 @@ def export_renter_payment_table_pdf(payment_records, user, year_filter, month_fi
     summary = Paragraph(summary_text, summary_style)
     elements.append(summary)
     
-    # Build PDF
-    doc.build(elements)
+    # Build PDF with watermark
+    watermark_template = WatermarkTemplate(A4, user.username)
+    doc.build(elements, onFirstPage=watermark_template, onLaterPages=watermark_template)
     buffer.seek(0)
     
     # Generate filename
@@ -3313,6 +3644,22 @@ def chat_unread_count():
     """Get unread message count for current user"""
     # For now, return 0 - this can be expanded later
     return jsonify({'unread_count': 0})
+
+# Initialize database on app startup (for all environments)
+def initialize_database():
+    """Initialize database, admin user, and settings on first request"""
+    try:
+        db.create_all()
+        migrate_database()  # Run migration to add new columns
+        create_admin_user()
+        create_default_settings()
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+
+# Register initialization to run before first request
+with app.app_context():
+    initialize_database()
 
 if __name__ == '__main__':
     with app.app_context():

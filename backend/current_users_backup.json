@@ -1,0 +1,22 @@
+{
+  "users": {
+    "columns": [
+      "id",
+      "username",
+      "email",
+      "password_hash",
+      "date_created"
+    ],
+    "data": [
+      [
+        1,
+        "Ashish",
+        "ashraj77777@gmail.com",
+        "pbkdf2:sha256:600000$sq6K4UWWqMaEqmpl$8b769dc56e64c38cad8dcbc3889e49ae462b7c691e28e525d668f508f95a24e1",
+        "2025-07-17 05:25:44.316499"
+      ]
+    ]
+  },
+  "settings": null,
+  "meter_readings": null
+}

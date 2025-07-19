@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Add Electricity Payment Record{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-bolt me-2 text-warning"></i>Add Electricity Payment Record</h1>
+                <a href="{{ url_for('admin_historical_data') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Electricity Payment Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Renter Selection -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label for="{{ form.renter_id.id }}" class="form-label fw-bold">{{ form.renter_id.label.text }}</label>
+                                {{ form.renter_id(class="form-select form-select-lg", required=True) }}
+                                {% if form.renter_id.errors %}
+                                    <div class="text-danger mt-2">
+                                        {% for error in form.renter_id.errors %}
+                                            <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Meter Readings Section -->
+                        <div class="card mb-4 border-light">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0 text-primary"><i class="fas fa-tachometer-alt me-2"></i>Meter Readings</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="{{ form.previous_reading.id }}" class="form-label">{{ form.previous_reading.label.text }}</label>
+                                        <div class="input-group">
+                                            {{ form.previous_reading(class="form-control", step="0.01", required=True) }}
+                                            <span class="input-group-text bg-light">units</span>
+                                        </div>
+                                        {% if form.previous_reading.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in form.previous_reading.errors %}
+                                                    <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="{{ form.current_reading.id }}" class="form-label">{{ form.current_reading.label.text }}</label>
+                                        <div class="input-group">
+                                            {{ form.current_reading(class="form-control", step="0.01", required=True, onchange="calculateUnits()") }}
+                                            <span class="input-group-text bg-light">units</span>
+                                        </div>
+                                        {% if form.current_reading.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in form.current_reading.errors %}
+                                                    <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="{{ form.units_consumed.id }}" class="form-label">{{ form.units_consumed.label.text }}</label>
+                                        <div class="input-group">
+                                            {{ form.units_consumed(class="form-control bg-light", step="0.01", required=True, readonly=True) }}
+                                            <span class="input-group-text bg-success text-white">units</span>
+                                        </div>
+                                        {% if form.units_consumed.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in form.units_consumed.errors %}
+                                                    <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Billing Section -->
+                        <div class="card mb-4 border-light">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0 text-success"><i class="fas fa-calculator me-2"></i>Billing Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="{{ form.rate_per_unit.id }}" class="form-label">{{ form.rate_per_unit.label.text }}</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">₹</span>
+                                            {{ form.rate_per_unit(class="form-control", step="0.01", required=True, onchange="calculateTotal()") }}
+                                        </div>
+                                        {% if form.rate_per_unit.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in form.rate_per_unit.errors %}
+                                                    <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="{{ form.total_amount.id }}" class="form-label fw-bold text-primary">{{ form.total_amount.label.text }}</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-primary text-white">₹</span>
+                                            {{ form.total_amount(class="form-control fw-bold text-primary bg-light", step="0.01", required=True, readonly=True) }}
+                                        </div>
+                                        {% if form.total_amount.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in form.total_amount.errors %}
+                                                    <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Information Section -->
+                        <div class="card mb-4 border-light">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0 text-warning"><i class="fas fa-credit-card me-2"></i>Payment Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="{{ form.payment_date.id }}" class="form-label">{{ form.payment_date.label.text }}</label>
+                                        {{ form.payment_date(class="form-control", required=True) }}
+                                        {% if form.payment_date.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in form.payment_date.errors %}
+                                                    <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="{{ form.payment_method.id }}" class="form-label">{{ form.payment_method.label.text }}</label>
+                                        {{ form.payment_method(class="form-select", required=True) }}
+                                        {% if form.payment_method.errors %}
+                                            <div class="text-danger mt-1">
+                                                {% for error in form.payment_method.errors %}
+                                                    <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label for="{{ form.notes.id }}" class="form-label"><i class="fas fa-sticky-note me-2"></i>{{ form.notes.label.text }}</label>
+                                {{ form.notes(class="form-control", rows="3", placeholder="Any additional notes about this electricity payment...") }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.notes.errors %}
+                                            <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin_historical_data') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            {{ form.submit(class="btn btn-primary btn-lg px-4") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Information Alert -->
+            <div class="alert alert-info mt-4 border-0 shadow-sm">
+                <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Important Notes:</h6>
+                <ul class="mb-0 small">
+                    <li>This will create both a meter reading and electricity bill marked as "paid" and "approved"</li>
+                    <li>Ensure readings are in chronological order for accurate meter progression</li>
+                    <li>Payment date should reflect the actual date when payment was received</li>
+                    <li>The system will automatically calculate the consumption based on meter readings</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateUnits() {
+    const currentReading = parseFloat(document.getElementById('current_reading').value) || 0;
+    const previousReading = parseFloat(document.getElementById('previous_reading').value) || 0;
+    const unitsConsumed = Math.max(0, currentReading - previousReading);
+    document.getElementById('units_consumed').value = unitsConsumed.toFixed(2);
+    calculateTotal();
+}
+
+function calculateTotal() {
+    const unitsConsumed = parseFloat(document.getElementById('units_consumed').value) || 0;
+    const ratePerUnit = parseFloat(document.getElementById('rate_per_unit').value) || 0;
+    const totalAmount = unitsConsumed * ratePerUnit;
+    document.getElementById('total_amount').value = totalAmount.toFixed(2);
+}
+
+// Auto-calculate on page load if values exist
+document.addEventListener('DOMContentLoaded', function() {
+    calculateUnits();
+});
+</script>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-lg {
+    padding: 12px 24px;
+    font-weight: 600;
+}
+
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.input-group-text {
+    font-weight: 500;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f1f8e9 100%);
+    border-left: 4px solid #2196f3;
+}
+
+/* Dark mode adjustments */
+.dark-mode .card {
+    background-color: #2d3748 !important;
+    color: white !important;
+}
+
+.dark-mode .card-header {
+    background-color: #4a5568 !important;
+}
+
+.dark-mode .bg-light {
+    background-color: #4a5568 !important;
+    color: white !important;
+}
+
+.dark-mode .form-control[readonly] {
+    background-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+}
+
+.dark-mode .alert-info {
+    background-color: #2d3748 !important;
+    color: #e2e8f0 !important;
+    border-color: #4299e1 !important;
+}
+</style>
+
+// Auto-calculate when previous reading changes
+document.getElementById('previous_reading').addEventListener('input', calculateUnits);
+</script>
+{% endblock %}

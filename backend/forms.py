@@ -86,6 +86,82 @@ class PaymentForm(FlaskForm):
     ], validators=[DataRequired()])
     submit = SubmitField('Pay Now')
 
+class HistoricalRentPaymentForm(FlaskForm):
+    renter_id = SelectField('Renter', coerce=int, validators=[DataRequired()])
+    amount = DecimalField('Rent Amount', validators=[
+        DataRequired(),
+        NumberRange(min=0, message='Amount must be positive')
+    ])
+    month = SelectField('Month', coerce=int, validators=[DataRequired()], choices=[
+        (1, 'January'), (2, 'February'), (3, 'March'), (4, 'April'),
+        (5, 'May'), (6, 'June'), (7, 'July'), (8, 'August'),
+        (9, 'September'), (10, 'October'), (11, 'November'), (12, 'December')
+    ])
+    year = IntegerField('Year', validators=[
+        DataRequired(),
+        NumberRange(min=2020, max=2030, message='Year must be between 2020 and 2030')
+    ])
+    payment_date = DateField('Payment Date', validators=[DataRequired()])
+    payment_method = SelectField('Payment Method', choices=[
+        ('cash', 'Cash'),
+        ('upi', 'UPI'),
+        ('card', 'Card'),
+        ('netbanking', 'Net Banking'),
+        ('cheque', 'Cheque'),
+        ('bank_transfer', 'Bank Transfer')
+    ], validators=[DataRequired()])
+    transaction_id = StringField('Transaction ID/Reference', validators=[Optional()])
+    notes = TextAreaField('Notes', validators=[Optional()])
+    submit = SubmitField('Add Historical Payment')
+
+class HistoricalElectricityPaymentForm(FlaskForm):
+    renter_id = SelectField('Renter', coerce=int, validators=[DataRequired()])
+    current_reading = DecimalField('Current Reading', validators=[
+        DataRequired(),
+        NumberRange(min=0, message='Reading must be positive')
+    ])
+    previous_reading = DecimalField('Previous Reading', validators=[
+        DataRequired(),
+        NumberRange(min=0, message='Reading must be positive')
+    ])
+    units_consumed = DecimalField('Units Consumed', validators=[
+        DataRequired(),
+        NumberRange(min=0, message='Units must be positive')
+    ])
+    rate_per_unit = DecimalField('Rate per Unit', validators=[
+        DataRequired(),
+        NumberRange(min=0, message='Rate must be positive')
+    ])
+    total_amount = DecimalField('Total Amount', validators=[
+        DataRequired(),
+        NumberRange(min=0, message='Amount must be positive')
+    ])
+    payment_date = DateField('Payment Date', validators=[DataRequired()])
+    payment_method = SelectField('Payment Method', choices=[
+        ('cash', 'Cash'),
+        ('upi', 'UPI'),
+        ('card', 'Card'),
+        ('netbanking', 'Net Banking'),
+        ('cheque', 'Cheque'),
+        ('bank_transfer', 'Bank Transfer')
+    ], validators=[DataRequired()])
+    notes = TextAreaField('Notes', validators=[Optional()])
+    submit = SubmitField('Add Electricity Payment Record')
+
+class CashPaymentForm(FlaskForm):
+    payment_type = SelectField('Payment Type', choices=[
+        ('rent', 'Rent Payment'),
+        ('electricity', 'Electricity Payment')
+    ], validators=[DataRequired()])
+    amount = DecimalField('Amount Paid', validators=[
+        DataRequired(),
+        NumberRange(min=0, message='Amount must be positive')
+    ])
+    payment_date = DateField('Payment Date', validators=[DataRequired()])
+    receipt_number = StringField('Receipt Number', validators=[Optional()])
+    notes = TextAreaField('Payment Notes', validators=[Optional()])
+    submit = SubmitField('Record Cash Payment')
+
 class ChatMessageForm(FlaskForm):
     message = TextAreaField('Message', validators=[
         DataRequired(),
