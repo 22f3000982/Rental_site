@@ -118,9 +118,9 @@ FLASK_ENV=development
 
 ### Default Admin Account
 
-- **Email**: ashraj77777@gmail.com
-- **Password**: 4129
-- **Username**: admin
+- **Email**: ***********
+- **Password**: *********
+- **Username**: *********
 
 ## Usage
 
