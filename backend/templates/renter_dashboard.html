@@ -27,8 +27,8 @@
         left: 0;
         right: 0;
         height: 4px;
-        background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
-        background-size: 200% 100%;
+        background: linear-gradient(90deg, #00c3ff, #ffff1c, #ff61a6, #43e97b, #38f9d7, #fa8bff, #f5576c);
+        background-size: 400% 100%;
         animation: shimmer 3s infinite;
     }
 
@@ -38,12 +38,14 @@
     }
 
     .status-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 50%, #fa8bff 100%);
         color: white;
         border-radius: 20px;
         padding: 2rem;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 4px 24px rgba(44, 62, 80, 0.12);
+        border: 2px solid #fff3;
     }
 
     .status-card::before {
@@ -71,14 +73,15 @@
     }
 
     .metric-card {
-        background: white;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         border-radius: 16px;
         padding: 1.5rem;
         text-align: center;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 20px rgba(44, 62, 80, 0.10);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         position: relative;
         overflow: hidden;
+        color: #fff;
     }
 
     .metric-card::before {
@@ -88,14 +91,14 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #4CAF50, #2196F3, #FF9800, #E91E63);
+        background: linear-gradient(90deg, #ff61a6, #43e97b, #38f9d7, #fa8bff, #f5576c);
     }
 
     .metric-value {
         font-size: 2.5rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(90deg, #ffff1c, #00c3ff, #ff61a6, #43e97b, #fa8bff, #f5576c);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -110,10 +113,10 @@
     }
 
     .premium-button {
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg, #00c3ff, #ffff1c, #ff61a6, #43e97b, #38f9d7, #fa8bff, #f5576c);
         border: none;
         border-radius: 12px;
-        color: white;
+        color: #232b36;
         padding: 0.75rem 2rem;
         font-weight: 600;
         text-transform: uppercase;
@@ -121,6 +124,7 @@
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 2px 8px rgba(44, 62, 80, 0.10);
     }
 
     .premium-button::before {
@@ -237,14 +241,15 @@
     }
 
     .hero-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #00c3ff 0%, #ffff1c 50%, #ff61a6 100%);
         border-radius: 24px;
         padding: 3rem 2rem;
-        color: white;
+        color: #232b36;
         text-align: center;
         position: relative;
         overflow: hidden;
         margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(44, 62, 80, 0.10);
     }
 
     .hero-section::before {
@@ -314,21 +319,25 @@
 <!-- Professional Header -->
 <div class="hero-section">
     <div class="row align-items-center">
-        <div class="col-lg-8">
-            <h1 class="display-5 fw-bold mb-3">
-                <i class="fas fa-home me-3"></i>
-                Welcome back, {{ current_user.username }}!
-            </h1>
-            <p class="lead mb-4">Your personal rental management dashboard</p>
-            <div class="d-flex flex-wrap gap-3 align-items-center">
-                <div class="badge bg-light text-dark px-3 py-2 rounded-pill">
-                    <i class="fas fa-door-open me-2"></i>Room {{ current_user.room_number }}
-                </div>
-                <div class="badge bg-light text-dark px-3 py-2 rounded-pill">
-                    <i class="fas fa-clock me-2"></i>{{ current_ist_time.strftime('%I:%M %p') }}
-                </div>
-                <div class="badge bg-light text-dark px-3 py-2 rounded-pill">
-                    <i class="fas fa-calendar me-2"></i>{{ current_ist_time.strftime('%d %b %Y') }}
+        <div class="col-lg-8 d-flex align-items-center">
+            <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; margin-right: 1.5rem; box-shadow: 0 2px 8px rgba(44,62,80,0.10);">
+                <i class="fas fa-user-circle fa-3x" style="color: #00d2d3;"></i>
+            </div>
+            <div style="flex:1;">
+                <h1 class="display-5 fw-bold mb-2">
+                    Welcome back, {{ current_user.username }}!
+                </h1>
+                <p class="lead mb-3">Your personal rental management dashboard</p>
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <div class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                        <i class="fas fa-door-open me-2"></i>Room {{ current_user.room_number }}
+                    </div>
+                    <div class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                        <i class="fas fa-clock me-2"></i>{{ current_ist_time.strftime('%I:%M %p') }}
+                    </div>
+                    <div class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                        <i class="fas fa-calendar me-2"></i>{{ current_ist_time.strftime('%d %b %Y') }}
+                    </div>
                 </div>
             </div>
         </div>
