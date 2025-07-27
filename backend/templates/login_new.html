@@ -1,60 +1,389 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Rent & Billing System{% endblock %}
+{% block title %}Sign In - RentFlow Pro{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card">
-            <div class="card-body p-4">
-                <div class="text-center mb-4">
-                    <i class="fas fa-sign-in-alt fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">Login</h3>
-                    <p class="text-muted">Sign in to your account</p>
-                </div>
-                
-                <form method="POST">
-                    {{ form.hidden_tag() }}
+<style>
+    .login-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .login-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.03)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.03)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.02)"/><circle cx="10" cy="50" r="0.5" fill="rgba(255,255,255,0.02)"/><circle cx="90" cy="30" r="0.5" fill="rgba(255,255,255,0.02)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+    
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        box-shadow: 
+            0 25px 50px -12px rgba(0, 0, 0, 0.25),
+            0 0 0 1px rgba(255, 255, 255, 0.1);
+        position: relative;
+        z-index: 1;
+        max-width: 450px;
+        width: 100%;
+        margin: 0 auto;
+    }
+    
+    .brand-section {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        border-radius: 20px 20px 0 0;
+        padding: 2rem;
+        text-align: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .brand-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 20px 20px;
+        animation: float 20s linear infinite;
+    }
+    
+    @keyframes float {
+        0% { transform: translateX(0) translateY(0); }
+        100% { transform: translateX(-20px) translateY(-20px); }
+    }
+    
+    .brand-logo {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .brand-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .brand-subtitle {
+        opacity: 0.9;
+        font-size: 0.95rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .login-form {
+        padding: 2.5rem;
+    }
+    
+    .form-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-input {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+        width: 100%;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        transform: translateY(-1px);
+    }
+    
+    .form-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        font-size: 1.1rem;
+        transition: color 0.3s ease;
+    }
+    
+    .form-input:focus + .form-icon {
+        color: #3b82f6;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .login-btn {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        border: none;
+        border-radius: 12px;
+        padding: 0.875rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        color: white;
+        width: 100%;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+    }
+    
+    .login-btn:active {
+        transform: translateY(0);
+    }
+    
+    .remember-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .custom-checkbox {
+        position: relative;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+    
+    .custom-checkbox input {
+        opacity: 0;
+        position: absolute;
+    }
+    
+    .checkmark {
+        height: 18px;
+        width: 18px;
+        background-color: #e5e7eb;
+        border-radius: 4px;
+        margin-right: 0.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .custom-checkbox input:checked ~ .checkmark {
+        background-color: #3b82f6;
+    }
+    
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 5px;
+        top: 2px;
+        width: 5px;
+        height: 9px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+    
+    .custom-checkbox input:checked ~ .checkmark:after {
+        display: block;
+    }
+    
+    .forgot-link {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+    
+    .forgot-link:hover {
+        color: #2563eb;
+        text-decoration: underline;
+    }
+    
+    .register-section {
+        text-align: center;
+        padding: 1.5rem 2.5rem 2rem;
+        border-top: 1px solid #e5e7eb;
+        background: rgba(249, 250, 251, 0.5);
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .register-link {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+    
+    .register-link:hover {
+        color: #2563eb;
+        text-decoration: underline;
+    }
+    
+    .security-badges {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+        opacity: 0.7;
+    }
+    
+    .security-badge {
+        display: flex;
+        align-items: center;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .security-badge i {
+        margin-right: 0.25rem;
+        color: #10b981;
+    }
+    
+    .error-message {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .login-container {
+            padding: 1rem;
+        }
+        
+        .login-card {
+            max-width: 100%;
+            margin: 0;
+        }
+        
+        .brand-section,
+        .login-form,
+        .register-section {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<div class="login-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <div class="login-card">
+                    <!-- Brand Section -->
+                    <div class="brand-section">
+                        <div class="brand-logo">
+                            <i class="fas fa-building fa-2x"></i>
+                        </div>
+                        <h1 class="brand-title">RentFlow Pro</h1>
+                        <p class="brand-subtitle">Professional Rental Management System</p>
+                    </div>
                     
-                    <div class="mb-3">
-                        {{ form.username.label(class="form-label") }}
-                        {{ form.username(class="form-control") }}
-                        {% if form.username.errors %}
-                            <div class="text-danger mt-1">
-                                {% for error in form.username.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
+                    <!-- Login Form -->
+                    <div class="login-form">
+                        <h2 class="text-center mb-4" style="color: #374151; font-weight: 700;">Welcome Back</h2>
+                        
+                        <form method="POST">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="form-group">
+                                {{ form.username.label(class="form-label") }}
+                                <div style="position: relative;">
+                                    {{ form.username(class="form-input", placeholder="Enter your username") }}
+                                    <i class="fas fa-user form-icon"></i>
+                                </div>
+                                {% if form.username.errors %}
+                                    <div class="error-message">
+                                        {% for error in form.username.errors %}
+                                            <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form.password.label(class="form-label") }}
-                        {{ form.password(class="form-control") }}
-                        {% if form.password.errors %}
-                            <div class="text-danger mt-1">
-                                {% for error in form.password.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
+                            
+                            <div class="form-group">
+                                {{ form.password.label(class="form-label") }}
+                                <div style="position: relative;">
+                                    {{ form.password(class="form-input", placeholder="Enter your password") }}
+                                    <i class="fas fa-lock form-icon"></i>
+                                </div>
+                                {% if form.password.errors %}
+                                    <div class="error-message">
+                                        {% for error in form.password.errors %}
+                                            <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
-                        {% endif %}
+                            
+                            <div class="remember-section">
+                                <label class="custom-checkbox">
+                                    {{ form.remember() }}
+                                    <span class="checkmark"></span>
+                                    Keep me signed in
+                                </label>
+                                <a href="#" class="forgot-link">Forgot password?</a>
+                            </div>
+                            
+                            <button type="submit" class="login-btn">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Sign In Securely
+                            </button>
+                        </form>
+                        
+                        <div class="security-badges">
+                            <div class="security-badge">
+                                <i class="fas fa-shield-alt"></i>
+                                SSL Secured
+                            </div>
+                            <div class="security-badge">
+                                <i class="fas fa-lock"></i>
+                                Encrypted
+                            </div>
+                            <div class="security-badge">
+                                <i class="fas fa-check-circle"></i>
+                                Verified
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="mb-3 form-check">
-                        {{ form.remember(class="form-check-input") }}
-                        {{ form.remember.label(class="form-check-label") }}
+                    <!-- Register Section -->
+                    <div class="register-section">
+                        <p style="color: #6b7280; margin-bottom: 0.5rem;">New to RentFlow Pro?</p>
+                        <a href="{{ url_for('register') }}" class="register-link">
+                            Create your account <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
                     </div>
-                    
-                    <div class="d-grid">
-                        {{ form.submit(class="btn btn-primary") }}
-                    </div>
-                </form>
-                
-                <div class="text-center mt-4">
-                    <p class="text-muted">
-                        Don't have an account? 
-                        <a href="{{ url_for('register') }}" class="text-primary">Register here</a>
-                    </p>
                 </div>
             </div>
         </div>
