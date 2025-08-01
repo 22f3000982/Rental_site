@@ -3129,6 +3129,85 @@ def admin_create_backup():
     
     return redirect(url_for('admin_settings'))
 
+@app.route('/admin/simple_backup', methods=['GET', 'POST'])
+@login_required
+def admin_simple_backup():
+    """Simple WhatsApp-style backup system"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    # Import the simple backup system
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from simple_gdrive_backup import simple_backup
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'setup_folder':
+            folder_url = request.form.get('folder_url', '').strip()
+            if folder_url:
+                try:
+                    simple_backup.save_gdrive_folder(folder_url)
+                    flash('Google Drive folder URL saved successfully!', 'success')
+                except Exception as e:
+                    flash(f'Error saving folder URL: {str(e)}', 'error')
+            else:
+                flash('Please provide a valid Google Drive folder URL', 'error')
+        
+        elif action == 'create_backup':
+            try:
+                result = simple_backup.create_backup()
+                if result['success']:
+                    flash(f'✅ {result["message"]}', 'success')
+                else:
+                    flash(f'❌ {result["message"]}', 'error')
+            except Exception as e:
+                flash(f'Error creating backup: {str(e)}', 'error')
+        
+        elif action == 'restore_backup':
+            try:
+                result = simple_backup.restore_backup()
+                if result['success']:
+                    flash(f'✅ {result["message"]}', 'success')
+                else:
+                    flash(f'❌ {result["message"]}', 'error')
+            except Exception as e:
+                flash(f'Error restoring backup: {str(e)}', 'error')
+    
+    # Get backup information
+    backup_info = simple_backup.get_backup_info()
+    folder_url = simple_backup.backup_folder_url
+    
+    return render_template('admin_simple_backup.html', 
+                         backup_info=backup_info, 
+                         folder_url=folder_url)
+
+@app.route('/admin/check_restore_needed')
+@login_required
+def admin_check_restore_needed():
+    """Check if restore is needed and show popup"""
+    if not current_user.is_admin:
+        return jsonify({'restore_needed': False})
+    
+    # Import the simple backup system
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from simple_gdrive_backup import simple_backup
+    
+    try:
+        restore_needed = simple_backup.check_for_restore_needed()
+        backup_info = simple_backup.get_backup_info()
+        
+        return jsonify({
+            'restore_needed': restore_needed and backup_info['exists'],
+            'backup_info': backup_info
+        })
+    except Exception as e:
+        return jsonify({'restore_needed': False, 'error': str(e)})
+
 @app.route('/admin/download_backup')
 @login_required
 def admin_download_backup():

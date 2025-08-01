@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Simple Backup - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">📱 WhatsApp-Style Simple Backup</h4>
+                    <div class="badge badge-primary">Super Easy!</div>
+                </div>
+                <div class="card-body">
+                    <!-- Welcome Message -->
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle"></i> How It Works (Like WhatsApp):</h5>
+                        <ol>
+                            <li><strong>Setup Once:</strong> Give me your Google Drive folder URL</li>
+                            <li><strong>Click Backup:</strong> Just like WhatsApp backup button</li>
+                            <li><strong>Auto Restore:</strong> When you deploy, it asks you to restore</li>
+                            <li><strong>That's It!</strong> No complex setup needed</li>
+                        </ol>
+                    </div>
+
+                    <!-- Step 1: Setup Google Drive Folder -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>📁 Step 1: Setup Your Google Drive Folder</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if folder_url %}
+                                <div class="alert alert-success">
+                                    <strong>✅ Folder Connected:</strong><br>
+                                    <small class="text-muted">{{ folder_url }}</small>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <strong>⚠️ No Folder Setup:</strong> Please provide your Google Drive folder URL
+                                </div>
+                            {% endif %}
+                            
+                            <form method="POST" class="mb-3">
+                                <input type="hidden" name="action" value="setup_folder">
+                                <div class="form-group">
+                                    <label for="folder_url">Google Drive Folder URL:</label>
+                                    <input type="url" class="form-control" name="folder_url" 
+                                           placeholder="https://drive.google.com/drive/folders/your-folder-id"
+                                           value="{{ folder_url or '' }}">
+                                    <small class="form-text text-muted">
+                                        Create a folder in Google Drive, share it, and paste the URL here
+                                    </small>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Folder URL
+                                </button>
+                            </form>
+
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Quick Setup Guide:</h6>
+                                    <ol class="mb-0">
+                                        <li>Go to <a href="https://drive.google.com" target="_blank">Google Drive</a></li>
+                                        <li>Create a new folder called "Rental_Site_Backups"</li>
+                                        <li>Right-click → Share → Copy link</li>
+                                        <li>Paste the link above</li>
+                                        <li>Done! 🎉</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Backup Actions -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>💾 Step 2: Backup & Restore (Like WhatsApp)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Backup Status -->
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6>Current Backup</h6>
+                                            {% if backup_info.exists %}
+                                                <i class="fas fa-check-circle text-success fa-3x"></i>
+                                                <p class="mt-2 mb-1"><strong>Backup Available</strong></p>
+                                                <small class="text-muted">{{ backup_info.date }}</small><br>
+                                                <small class="text-muted">{{ backup_info.tables }} tables, {{ backup_info.records }} records</small>
+                                            {% else %}
+                                                <i class="fas fa-exclamation-triangle text-warning fa-3x"></i>
+                                                <p class="mt-2 mb-1"><strong>No Backup Found</strong></p>
+                                                <small class="text-muted">Create your first backup</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="col-md-6">
+                                    <div class="d-flex flex-column h-100 justify-content-center">
+                                        <!-- WhatsApp-style Backup Button -->
+                                        <form method="POST" class="mb-3">
+                                            <input type="hidden" name="action" value="create_backup">
+                                            <button type="submit" class="btn btn-success btn-lg btn-block">
+                                                <i class="fas fa-cloud-upload-alt"></i> 
+                                                Backup Now<br>
+                                                <small>(Like WhatsApp Backup)</small>
+                                            </button>
+                                        </form>
+
+                                        <!-- WhatsApp-style Restore Button -->
+                                        <form method="POST">
+                                            <input type="hidden" name="action" value="restore_backup">
+                                            <button type="submit" class="btn btn-info btn-lg btn-block"
+                                                    {% if not backup_info.exists %}disabled{% endif %}>
+                                                <i class="fas fa-cloud-download-alt"></i> 
+                                                Restore Data<br>
+                                                <small>(Like WhatsApp Restore)</small>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Your Workflow -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>🚀 Step 3: Your New Workflow</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Before Deployment (Optional):</h6>
+                                    <ol>
+                                        <li>Users register on live site</li>
+                                        <li>Click "Backup Now" (saves to Google Drive)</li>
+                                        <li>Deploy your code safely</li>
+                                    </ol>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>After Deployment:</h6>
+                                    <ol>
+                                        <li>Open admin panel</li>
+                                        <li>See "Restore Available" popup</li>
+                                        <li>Click "Restore" - All users back!</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-success mt-3">
+                                <strong>🎉 Perfect!</strong> Just like WhatsApp - backup and restore with one click!
+                                <br><small>No more lost users during deployment!</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-check for restore needed (like WhatsApp) -->
+<script>
+$(document).ready(function() {
+    // Check if restore is needed when page loads
+    $.get('/admin/check_restore_needed', function(data) {
+        if (data.restore_needed) {
+            // Show WhatsApp-style restore popup
+            Swal.fire({
+                title: '🔄 Restore Available',
+                html: `
+                    <p><strong>Like WhatsApp - restore your data?</strong></p>
+                    <p>Backup from: <strong>${data.backup_info.date}</strong></p>
+                    <p>Contains: <strong>${data.backup_info.records} records</strong></p>
+                    <p><small>This will restore all users who registered on your live site</small></p>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '✅ Restore Now',
+                cancelButtonText: '❌ Skip',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Submit restore form
+                    $('<form method="POST"><input type="hidden" name="action" value="restore_backup"></form>')
+                        .appendTo('body').submit();
+                }
+            });
+        }
+    });
+});
+</script>
+
+{% endblock %}
