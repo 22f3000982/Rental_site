@@ -3,24 +3,268 @@
 {% block title %}Register - Rent & Billing System{% endblock %}
 
 {% block content %}
+<style>
+    /* Monkey Animation Styles */
+    .monkey-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+
+    .monkey {
+        width: 80px;
+        height: 80px;
+        background: #8B4513;
+        border-radius: 50% 50% 45% 45%;
+        position: relative;
+        transition: all 0.3s ease;
+        animation: monkeyBob 2s ease-in-out infinite;
+    }
+
+    @keyframes monkeyBob {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+    }
+
+    /* Monkey ears */
+    .monkey::before,
+    .monkey::after {
+        content: '';
+        position: absolute;
+        width: 25px;
+        height: 25px;
+        background: #8B4513;
+        border-radius: 50%;
+        top: 8px;
+    }
+
+    .monkey::before {
+        left: -10px;
+    }
+
+    .monkey::after {
+        right: -10px;
+    }
+
+    /* Monkey face */
+    .monkey-face {
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 45px;
+        background: #DEB887;
+        border-radius: 50% 50% 60% 60%;
+    }
+
+    /* Monkey eyes */
+    .monkey-eyes {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 35px;
+        height: 15px;
+    }
+
+    .eye {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: white;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .eye.left {
+        left: 3px;
+    }
+
+    .eye.right {
+        right: 3px;
+    }
+
+    .eye::after {
+        content: '';
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: black;
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.3s ease;
+    }
+
+    /* Eyes closed state */
+    .monkey.eyes-closed .eye {
+        height: 2px;
+        background: #8B4513;
+        border-radius: 20px;
+        top: 6px;
+    }
+
+    .monkey.eyes-closed .eye::after {
+        display: none;
+    }
+
+    /* Monkey hands */
+    .monkey-hands {
+        position: absolute;
+        top: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 70px;
+        height: 30px;
+    }
+
+    .hand {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        background: #8B4513;
+        border-radius: 50%;
+        transition: all 0.5s ease;
+    }
+
+    .hand.left {
+        left: 8px;
+        top: 8px;
+    }
+
+    .hand.right {
+        right: 8px;
+        top: 8px;
+    }
+
+    /* Peek state - one hand moves away */
+    .monkey.peeking .hand.right {
+        transform: translateX(15px) translateY(-8px);
+    }
+
+    /* Monkey nose */
+    .monkey-nose {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 6px;
+        height: 6px;
+        background: black;
+        border-radius: 50%;
+    }
+
+    /* Monkey mouth */
+    .monkey-mouth {
+        position: absolute;
+        bottom: 3px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 15px;
+        height: 8px;
+        border: 2px solid black;
+        border-top: none;
+        border-radius: 0 0 15px 15px;
+    }
+
+    /* Slippery button animation */
+    .btn.slippery {
+        animation: slip 0.5s ease-in-out;
+    }
+
+    @keyframes slip {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(15px); }
+        50% { transform: translateX(-15px); }
+        75% { transform: translateX(10px); }
+        100% { transform: translateX(0); }
+    }
+
+    /* Happy monkey animation */
+    .monkey.happy {
+        animation: monkeyHappy 1s ease-in-out;
+    }
+
+    @keyframes monkeyHappy {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        25% { transform: translateY(-12px) rotate(5deg); }
+        50% { transform: translateY(-8px) rotate(-5deg); }
+        75% { transform: translateY(-12px) rotate(5deg); }
+    }
+
+    /* Shake animation */
+    .shake {
+        animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-8px); }
+        75% { transform: translateX(8px); }
+    }
+
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #666;
+        z-index: 10;
+    }
+
+    .password-toggle:hover {
+        color: #007bff;
+    }
+
+    .position-relative {
+        position: relative;
+    }
+</style>
+
+<!-- Animated Monkey -->
+<div class="monkey-container">
+    <div class="monkey" id="monkey">
+        <div class="monkey-face">
+            <div class="monkey-eyes">
+                <div class="eye left"></div>
+                <div class="eye right"></div>
+            </div>
+            <div class="monkey-nose"></div>
+            <div class="monkey-mouth"></div>
+        </div>
+        <div class="monkey-hands">
+            <div class="hand left"></div>
+            <div class="hand right"></div>
+        </div>
+    </div>
+</div>
+
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6 col-sm-10 col-11">
         <div class="card">
             <div class="card-body p-4">
                 <div class="text-center mb-4">
                     <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">Register</h3>
-                    <p class="text-muted">Create your renter account</p>
+                    <h3 class="card-title">🐵Registration!</h3>
+                    <p class="text-muted">Create your renter account with our playful monkey</p>
                 </div>
                 
-                <form method="POST">
+                <form method="POST" id="registerForm">
                     {{ form.hidden_tag() }}
                     
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 {{ form.username.label(class="form-label") }}
-                                {{ form.username(class="form-control") }}
+                                {{ form.username(class="form-control", id="username") }}
                                 {% if form.username.errors %}
                                     <div class="text-danger mt-1">
                                         {% for error in form.username.errors %}
@@ -34,7 +278,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 {{ form.email.label(class="form-label") }}
-                                {{ form.email(class="form-control") }}
+                                {{ form.email(class="form-control", id="email") }}
                                 {% if form.email.errors %}
                                     <div class="text-danger mt-1">
                                         {% for error in form.email.errors %}
@@ -50,7 +294,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 {{ form.phone.label(class="form-label") }}
-                                {{ form.phone(class="form-control") }}
+                                {{ form.phone(class="form-control", id="phone") }}
                                 {% if form.phone.errors %}
                                     <div class="text-danger mt-1">
                                         {% for error in form.phone.errors %}
@@ -64,7 +308,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 {{ form.room_number.label(class="form-label") }}
-                                {{ form.room_number(class="form-control") }}
+                                {{ form.room_number(class="form-control", id="room_number") }}
                                 {% if form.room_number.errors %}
                                     <div class="text-danger mt-1">
                                         {% for error in form.room_number.errors %}
@@ -78,9 +322,10 @@
                     
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div class="mb-3 position-relative">
                                 {{ form.password.label(class="form-label") }}
-                                {{ form.password(class="form-control") }}
+                                {{ form.password(class="form-control", id="password") }}
+                                <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
                                 {% if form.password.errors %}
                                     <div class="text-danger mt-1">
                                         {% for error in form.password.errors %}
@@ -92,9 +337,10 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div class="mb-3 position-relative">
                                 {{ form.confirm_password.label(class="form-label") }}
-                                {{ form.confirm_password(class="form-control") }}
+                                {{ form.confirm_password(class="form-control", id="confirm_password") }}
+                                <i class="fas fa-eye password-toggle" id="confirmPasswordToggle"></i>
                                 {% if form.confirm_password.errors %}
                                     <div class="text-danger mt-1">
                                         {% for error in form.confirm_password.errors %}
@@ -107,7 +353,7 @@
                     </div>
                     
                     <div class="d-grid">
-                        {{ form.submit(class="btn btn-primary") }}
+                        {{ form.submit(class="btn btn-primary", id="registerButton", value="🐵 Register with Monkey!") }}
                     </div>
                 </form>
                 
@@ -121,4 +367,196 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const monkey = document.getElementById('monkey');
+        const passwordField = document.getElementById('password');
+        const confirmPasswordField = document.getElementById('confirm_password');
+        const passwordToggle = document.getElementById('passwordToggle');
+        const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
+        const registerButton = document.getElementById('registerButton');
+        const registerForm = document.getElementById('registerForm');
+        const allInputs = document.querySelectorAll('.form-control');
+        const card = document.querySelector('.card');
+
+        // Monkey closes eyes when typing password
+        function closeMonkeyEyes() {
+            monkey.classList.add('eyes-closed');
+        }
+
+        // Monkey opens eyes when not typing password
+        function openMonkeyEyes() {
+            monkey.classList.remove('eyes-closed');
+        }
+
+        // Monkey peeks when showing password
+        function monkeyPeek() {
+            monkey.classList.add('peeking');
+            monkey.classList.remove('eyes-closed');
+        }
+
+        // Monkey stops peeking
+        function monkeyStopPeek() {
+            monkey.classList.remove('peeking');
+        }
+
+        // Password field events
+        if (passwordField) {
+            passwordField.addEventListener('focus', closeMonkeyEyes);
+            passwordField.addEventListener('blur', openMonkeyEyes);
+            passwordField.addEventListener('input', closeMonkeyEyes);
+        }
+
+        if (confirmPasswordField) {
+            confirmPasswordField.addEventListener('focus', closeMonkeyEyes);
+            confirmPasswordField.addEventListener('blur', openMonkeyEyes);
+            confirmPasswordField.addEventListener('input', closeMonkeyEyes);
+        }
+
+        // Password toggle functionality
+        if (passwordToggle) {
+            passwordToggle.addEventListener('click', function() {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+                
+                if (type === 'text') {
+                    this.classList.remove('fa-eye');
+                    this.classList.add('fa-eye-slash');
+                    monkeyPeek();
+                } else {
+                    this.classList.remove('fa-eye-slash');
+                    this.classList.add('fa-eye');
+                    monkeyStopPeek();
+                    closeMonkeyEyes();
+                }
+            });
+        }
+
+        if (confirmPasswordToggle) {
+            confirmPasswordToggle.addEventListener('click', function() {
+                const type = confirmPasswordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                confirmPasswordField.setAttribute('type', type);
+                
+                if (type === 'text') {
+                    this.classList.remove('fa-eye');
+                    this.classList.add('fa-eye-slash');
+                    monkeyPeek();
+                } else {
+                    this.classList.remove('fa-eye-slash');
+                    this.classList.add('fa-eye');
+                    monkeyStopPeek();
+                    closeMonkeyEyes();
+                }
+            });
+        }
+
+        // Check if all fields are filled
+        function areAllFieldsFilled() {
+            for (let input of allInputs) {
+                if (!input.value.trim()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Slippery button effect
+        function makeButtonSlippery() {
+            registerButton.classList.add('slippery');
+            setTimeout(() => {
+                registerButton.classList.remove('slippery');
+            }, 500);
+        }
+
+        // Form submission handling
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                if (!areAllFieldsFilled()) {
+                    e.preventDefault();
+                    makeButtonSlippery();
+                    
+                    // Show error message
+                    let errorDiv = document.querySelector('.monkey-error-message');
+                    if (!errorDiv) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.className = 'alert alert-warning monkey-error-message mt-3';
+                        registerForm.appendChild(errorDiv);
+                    }
+                    errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 🐵 Oops! The monkey says: Fill all fields first!';
+                    
+                    // Shake the card
+                    card.classList.add('shake');
+                    setTimeout(() => {
+                        card.classList.remove('shake');
+                    }, 500);
+                    
+                    return false;
+                } else {
+                    // Happy monkey animation
+                    monkey.classList.add('happy');
+                    
+                    // Check password match
+                    if (passwordField && confirmPasswordField && passwordField.value !== confirmPasswordField.value) {
+                        e.preventDefault();
+                        let errorDiv = document.querySelector('.monkey-error-message');
+                        if (!errorDiv) {
+                            errorDiv = document.createElement('div');
+                            errorDiv.className = 'alert alert-danger monkey-error-message mt-3';
+                            registerForm.appendChild(errorDiv);
+                        }
+                        errorDiv.innerHTML = '<i class="fas fa-times-circle"></i> 🐵 Monkey says: Passwords don\'t match!';
+                        makeButtonSlippery();
+                        return false;
+                    }
+                    
+                    // Success - remove any error messages
+                    const errorDiv = document.querySelector('.monkey-error-message');
+                    if (errorDiv) {
+                        errorDiv.remove();
+                    }
+                }
+            });
+        }
+
+        // Button hover effect when fields are not filled
+        if (registerButton) {
+            registerButton.addEventListener('mouseover', function() {
+                if (!areAllFieldsFilled()) {
+                    makeButtonSlippery();
+                }
+            });
+        }
+
+        // Input field events to show monkey reactions
+        allInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                if (this.type !== 'password') {
+                    openMonkeyEyes();
+                }
+            });
+            
+            input.addEventListener('input', function() {
+                // Remove error message when user starts typing
+                const errorDiv = document.querySelector('.monkey-error-message');
+                if (errorDiv) {
+                    errorDiv.remove();
+                }
+            });
+        });
+
+        // Random monkey movements
+        setInterval(() => {
+            if (!monkey.classList.contains('eyes-closed') && !monkey.classList.contains('peeking')) {
+                const randomMove = Math.random();
+                if (randomMove < 0.1) { // 10% chance
+                    monkey.style.transform = 'translateY(-5px) rotate(2deg)';
+                    setTimeout(() => {
+                        monkey.style.transform = 'translateY(0) rotate(0deg)';
+                    }, 300);
+                }
+            }
+        }, 2000);
+    });
+</script>
 {% endblock %}

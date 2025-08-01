@@ -4,20 +4,27 @@
 
 {% block content %}
 <style>
-    /* Core Page Styling */
+    /* Core Page Styling - Professional Corporate Theme */
     .login-page {
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 1rem;
-        background: linear-gradient(135deg, #4C1D95 0%, #3B82F6 100%);
+        background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
         position: relative;
         overflow: hidden;
         isolation: isolate;
+        animation: gradientShift 20s ease-in-out infinite;
     }
     
-    /* Background Effects with New Color Palette */
+    @keyframes gradientShift {
+        0%, 100% { background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%); }
+        33% { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); }
+        66% { background: linear-gradient(135deg, #334155 0%, #475569 50%, #64748b 100%); }
+    }
+    
+    /* Background Effects with Professional Corporate Colors */
     .login-page::before {
         content: '';
         position: absolute;
@@ -25,10 +32,16 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
-        opacity: 0.7;
+        background: radial-gradient(circle at 30% 70%, rgba(99, 102, 241, 0.15) 0%, transparent 60%),
+                    radial-gradient(circle at 70% 30%, rgba(56, 189, 248, 0.1) 0%, transparent 60%);
+        opacity: 0.8;
         z-index: -2;
-        animation: pulseBackground 15s ease-in-out infinite;
+        animation: professionalPulse 25s ease-in-out infinite;
+    }
+    
+    @keyframes professionalPulse {
+        0%, 100% { opacity: 0.8; transform: scale(1) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1.05) rotate(2deg); }
     }
     
     .login-page::after {
@@ -37,14 +50,19 @@
         bottom: 0;
         left: 0;
         right: 0;
-        height: 250px;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 200"><defs><linearGradient id="cityGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:rgba(76,29,149,0.9);stop-opacity:1" /><stop offset="100%" style="stop-color:rgba(59,130,246,0.95);stop-opacity:1" /></linearGradient></defs><polygon fill="url(%23cityGrad)" points="0,200 0,150 50,150 50,100 100,100 100,120 150,120 150,80 200,80 200,140 250,140 250,90 300,90 300,160 350,160 350,110 400,110 400,130 450,130 450,70 500,70 500,150 550,150 550,100 600,100 600,170 650,170 650,60 700,60 700,140 750,140 750,120 800,120 800,80 850,80 850,160 900,160 900,110 950,110 950,130 1000,130 1000,90 1050,90 1050,150 1100,150 1100,180 1200,180 1200,200"/><g opacity="0.7"><rect x="75" y="110" width="4" height="6" fill="rgba(236,72,153,0.8)"/><rect x="175" y="90" width="4" height="6" fill="rgba(236,72,153,0.8)"/><rect x="275" y="100" width="4" height="6" fill="rgba(236,72,153,0.8)"/><rect x="475" y="80" width="4" height="6" fill="rgba(236,72,153,0.8)"/><rect x="575" y="110" width="4" height="6" fill="rgba(236,72,153,0.8)"/><rect x="675" y="70" width="4" height="6" fill="rgba(236,72,153,0.8)"/><rect x="775" y="130" width="4" height="6" fill="rgba(236,72,153,0.8)"/><rect x="875" y="90" width="4" height="6" fill="rgba(236,72,153,0.8)"/></g></svg>');
-        opacity: 0.8;
+        height: 300px;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300"><defs><linearGradient id="cityGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:rgba(30,41,59,0.95);stop-opacity:1" /><stop offset="100%" style="stop-color:rgba(51,65,85,0.98);stop-opacity:1" /></linearGradient></defs><polygon fill="url(%23cityGrad)" points="0,300 0,200 60,200 60,120 120,120 120,150 180,150 180,100 240,100 240,180 300,180 300,110 360,110 360,200 420,200 420,140 480,140 480,90 540,90 540,190 600,190 600,130 660,130 660,210 720,210 720,80 780,80 780,170 840,170 840,150 900,150 900,100 960,100 960,200 1020,200 1020,120 1080,120 1080,180 1140,180 1140,220 1200,220 1200,300"/><g opacity="0.6"><rect x="90" y="140" width="6" height="8" fill="rgba(99,102,241,0.7)"/><rect x="210" y="120" width="6" height="8" fill="rgba(56,189,248,0.7)"/><rect x="330" y="130" width="6" height="8" fill="rgba(99,102,241,0.7)"/><rect x="570" y="110" width="6" height="8" fill="rgba(56,189,248,0.7)"/><rect x="690" y="150" width="6" height="8" fill="rgba(99,102,241,0.7)"/><rect x="810" y="90" width="6" height="8" fill="rgba(56,189,248,0.7)"/><rect x="930" y="170" width="6" height="8" fill="rgba(99,102,241,0.7)"/><rect x="1050" y="140" width="6" height="8" fill="rgba(56,189,248,0.7)"/></g></svg>');
+        opacity: 0.9;
         z-index: -1;
-        animation: cityGlow 10s ease-in-out infinite;
+        animation: subtleCityGlow 15s ease-in-out infinite;
     }
     
-    /* Particle Effect Container */
+    @keyframes subtleCityGlow {
+        0%, 100% { opacity: 0.9; filter: brightness(1); }
+        50% { opacity: 1; filter: brightness(1.1); }
+    }
+    
+    /* Particle Effect Container - Professional Floating Elements */
     .particle-container {
         position: absolute;
         top: 0;
@@ -57,12 +75,40 @@
     
     .particle {
         position: absolute;
-        width: 4px;
-        height: 4px;
-        background: rgba(34, 211, 238, 0.6);
+        width: 3px;
+        height: 3px;
+        background: rgba(99, 102, 241, 0.4);
         border-radius: 50%;
-        animation: particleFloat 25s linear infinite;
-        box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+        animation: professionalFloat 30s linear infinite;
+        box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+    }
+    
+    .particle:nth-child(odd) {
+        background: rgba(56, 189, 248, 0.3);
+        box-shadow: 0 0 6px rgba(56, 189, 248, 0.2);
+    }
+    
+    @keyframes professionalFloat {
+        0% { 
+            transform: translate(0, 0) scale(0.8);
+            opacity: 0.3;
+        }
+        25% { 
+            transform: translate(15px, -30px) scale(1);
+            opacity: 0.6;
+        }
+        50% { 
+            transform: translate(-10px, -60px) scale(1.1);
+            opacity: 0.8;
+        }
+        75% { 
+            transform: translate(20px, -90px) scale(0.9);
+            opacity: 0.5;
+        }
+        100% { 
+            transform: translate(0, -120px) scale(0.7);
+            opacity: 0.2;
+        }
     }
     
     /* Particle Variations */
@@ -123,39 +169,59 @@
         background: radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.1) 0%, transparent 70%);
     }
     
-    /* Login Container Styling */
+    /* Login Container Styling - Premium Professional Design */
     .login-container {
         width: 100%;
         max-width: 1400px;
         background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(25px);
-        border: 1px solid rgba(236, 72, 153, 0.3);
-        border-radius: 30px;
+        backdrop-filter: blur(30px);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 24px;
         box-shadow: 
-            0 30px 60px -12px rgba(0, 0, 0, 0.25),
-            0 0 0 1px rgba(236, 72, 153, 0.15),
-            inset 0 0 20px rgba(236, 72, 153, 0.1);
+            0 25px 50px -12px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(99, 102, 241, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
         overflow: hidden;
         display: grid;
         grid-template-columns: 1fr 1fr;
-        min-height: 700px;
+        min-height: 720px;
         position: relative;
         z-index: 10;
-        transition: all 0.5s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: containerFadeIn 1s ease-out;
+    }
+    
+    @keyframes containerFadeIn {
+        0% { 
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+        100% { 
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    .login-container:hover {
+        box-shadow: 
+            0 32px 64px -12px rgba(0, 0, 0, 0.35),
+            0 0 0 1px rgba(99, 102, 241, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
     }
     
     .dark-mode .login-container {
-        background: rgba(46, 16, 101, 0.98);
-        border: 1px solid rgba(236, 72, 153, 0.1);
+        background: rgba(15, 23, 42, 0.98);
+        border: 1px solid rgba(99, 102, 241, 0.15);
         box-shadow: 
-            0 30px 60px -12px rgba(0, 0, 0, 0.5),
-            0 0 0 1px rgba(236, 72, 153, 0.05),
-            inset 0 0 20px rgba(236, 72, 153, 0.05);
+            0 25px 50px -12px rgba(0, 0, 0, 0.6),
+            0 0 0 1px rgba(99, 102, 241, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
     
-    /* Brand Section Styling */
+    /* Brand Section Styling - Executive Professional Look */
     .login-brand {
-        background: linear-gradient(135deg, #4C1D95 0%, #3B82F6 100%);
+        background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
         padding: 4rem;
         display: flex;
         flex-direction: column;
@@ -165,19 +231,24 @@
         color: white;
         position: relative;
         overflow: hidden;
-        transition: background 0.5s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .login-brand::before {
         content: '';
         position: absolute;
-        top: 5%;
-        left: 5%;
-        width: 90%;
-        height: 90%;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs><linearGradient id="buildingGrad" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" style="stop-color:rgba(236,72,153,0.15);stop-opacity:1" /><stop offset="100%" style="stop-color:rgba(34,211,238,0.35);stop-opacity:1" /></linearGradient></defs><g opacity="0.7"><rect x="50" y="200" width="60" height="150" fill="url(%23buildingGrad)" rx="8"/><rect x="130" y="150" width="50" height="200" fill="url(%23buildingGrad)" rx="8"/><rect x="200" y="180" width="70" height="170" fill="url(%23buildingGrad)" rx="8"/><rect x="290" y="160" width="55" height="190" fill="url(%23buildingGrad)" rx="8"/><g opacity="0.9"><rect x="60" y="220" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="75" y="220" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="90" y="220" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="60" y="250" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="75" y="250" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="140" y="170" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="155" y="170" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="140" y="200" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="210" y="200" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="225" y="200" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="240" y="200" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="300" y="180" width="8" height="10" fill="rgba(236,72,153,0.7)"/><rect x="315" y="180" width="8" height="10" fill="rgba(236,72,153,0.7)"/></g></g></svg>');
-        opacity: 0.5;
-        animation: buildingGlow 12s ease-in-out infinite;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs><linearGradient id="buildingGrad" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" style="stop-color:rgba(99,102,241,0.12);stop-opacity:1" /><stop offset="100%" style="stop-color:rgba(56,189,248,0.18);stop-opacity:1" /></linearGradient></defs><g opacity="0.6"><rect x="50" y="200" width="60" height="150" fill="url(%23buildingGrad)" rx="12"/><rect x="130" y="150" width="50" height="200" fill="url(%23buildingGrad)" rx="12"/><rect x="200" y="180" width="70" height="170" fill="url(%23buildingGrad)" rx="12"/><rect x="290" y="160" width="55" height="190" fill="url(%23buildingGrad)" rx="12"/><g opacity="0.8"><rect x="65" y="230" width="8" height="12" fill="rgba(99,102,241,0.6)" rx="2"/><rect x="80" y="230" width="8" height="12" fill="rgba(99,102,241,0.6)" rx="2"/><rect x="95" y="230" width="8" height="12" fill="rgba(99,102,241,0.6)" rx="2"/><rect x="65" y="270" width="8" height="12" fill="rgba(99,102,241,0.6)" rx="2"/><rect x="80" y="270" width="8" height="12" fill="rgba(99,102,241,0.6)" rx="2"/><rect x="145" y="180" width="8" height="12" fill="rgba(56,189,248,0.6)" rx="2"/><rect x="160" y="180" width="8" height="12" fill="rgba(56,189,248,0.6)" rx="2"/><rect x="145" y="220" width="8" height="12" fill="rgba(56,189,248,0.6)" rx="2"/></g></g></svg>');
+        opacity: 0.4;
+        animation: subtleBuildingGlow 18s ease-in-out infinite;
+    }
+    
+    @keyframes subtleBuildingGlow {
+        0%, 100% { opacity: 0.4; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(1.02); }
     }
     
     .login-brand::after {
@@ -270,21 +341,27 @@
     }
     
     .brand-title {
-        font-size: 2.5rem;
+        font-size: 2.8rem;
         font-weight: 800;
         margin-bottom: 0.75rem;
-        letter-spacing: -0.75px;
+        letter-spacing: -1px;
         text-transform: uppercase;
-        background: linear-gradient(45deg, #EC4899, #22D3EE);
+        background: linear-gradient(45deg, #6366f1, #38bdf8, #06b6d4);
+        background-size: 200% 200%;
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
-        animation: textShine 5s ease-in-out infinite;
+        animation: professionalTextShine 6s ease-in-out infinite;
     }
     
-    @keyframes textShine {
-        0% { background-position: 0% 50%; }
+    @keyframes professionalTextShine {
+        0%, 100% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+    }
+    
+    @keyframes professionalGradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
     }
     
     .brand-subtitle {
@@ -326,12 +403,13 @@
     .brand-feature i {
         width: 24px;
         margin-right: 1rem;
-        color: #22D3EE;
-        transition: color 0.3s ease;
+        color: #38bdf8;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .brand-feature:hover i {
-        color: #EC4899;
+        color: #6366f1;
+        transform: scale(1.2);
     }
     
     /* Builder Section Styling */
@@ -455,21 +533,25 @@
     }
     
     .form-title {
-        font-size: 2rem;
+        font-size: 2.2rem;
         font-weight: 800;
         margin-bottom: 0.75rem;
-        text-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
-        background: linear-gradient(45deg, #EC4899, #22D3EE);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(45deg, #1e293b, #6366f1, #38bdf8);
+        background-size: 200% 200%;
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
-        animation: textShine 5s ease-in-out infinite;
+        animation: professionalTextShine 6s ease-in-out infinite;
     }
     
     .dark-mode .form-title {
-        background: linear-gradient(45deg, #22D3EE, #EC4899);
+        background: linear-gradient(45deg, #38bdf8, #6366f1, #e2e8f0);
+        background-size: 200% 200%;
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+        text-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
     }
     
     .form-subtitle {
@@ -508,39 +590,39 @@
     .form-input {
         width: 100%;
         padding: 1rem 1.25rem;
-        border: 2px solid #D1D5DB;
-        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
         font-size: 1.1rem;
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.95);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(248, 250, 252, 0.95);
         backdrop-filter: blur(15px);
-        color: #1F2937;
+        color: #1e293b;
         box-sizing: border-box;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 10px rgba(30, 41, 59, 0.1);
     }
     
     .dark-mode .form-input {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(236, 72, 153, 0.25);
-        color: #E2E8F0;
+        background: rgba(30, 41, 59, 0.15);
+        border-color: rgba(51, 65, 85, 0.5);
+        color: #e2e8f0;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
     
     .form-input:focus {
         outline: none;
-        border-color: #22D3EE;
+        border-color: #6366f1;
         box-shadow: 
-            0 0 0 4px rgba(34, 211, 238, 0.25),
-            0 4px 20px rgba(34, 211, 238, 0.3);
+            0 0 0 4px rgba(99, 102, 241, 0.15),
+            0 4px 20px rgba(99, 102, 241, 0.2);
         background: rgba(255, 255, 255, 1);
-        transform: scale(1.02);
+        transform: translateY(-2px);
     }
     
     .dark-mode .form-input:focus {
-        border-color: #EC4899;
+        border-color: #38bdf8;
         box-shadow: 
-            0 0 0 4px rgba(236, 72, 153, 0.3),
-            0 4px 20px rgba(236, 72, 153, 0.4);
+            0 0 0 4px rgba(56, 189, 248, 0.2),
+            0 4px 20px rgba(56, 189, 248, 0.3);
         background: rgba(255, 255, 255, 0.2);
     }
     
@@ -579,64 +661,64 @@
     .checkbox-group input[type="checkbox"] {
         margin-right: 0.75rem;
         transform: scale(1.2);
-        accent-color: #22D3EE;
-        transition: accent-color 0.3s ease;
+        accent-color: #6366f1;
+        transition: accent-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .dark-mode .checkbox-group input[type="checkbox"] {
-        accent-color: #EC4899;
+        accent-color: #38bdf8;
     }
     
     .checkbox-group label {
-        color: #4B5563;
+        color: #475569;
         font-weight: 600;
-        transition: color 0.3s ease;
+        transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .dark-mode .checkbox-group label {
-        color: #E2E8F0;
+        color: #e2e8f0;
     }
     
     .forgot-link {
-        color: #6B7280;
+        color: #6b7280;
         text-decoration: none;
         font-weight: 600;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .forgot-link:hover {
-        color: #EC4899;
+        color: #6366f1;
         text-decoration: underline;
-        text-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+        text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
     }
     
     .dark-mode .forgot-link {
-        color: #D1D5DB;
+        color: #d1d5db;
     }
     
     .dark-mode .forgot-link:hover {
-        color: #22D3EE;
-        text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+        color: #38bdf8;
+        text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
     }
     
     /* Login Button Styling */
     .login-button {
         width: 100%;
-        background: linear-gradient(135deg, #4C1D95 0%, #EC4899 100%);
+        background: linear-gradient(135deg, #1e293b 0%, #6366f1 100%);
         color: white;
         border: none;
         padding: 1rem;
-        border-radius: 10px;
+        border-radius: 0.75rem;
         font-size: 1.1rem;
         font-weight: 700;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         margin-bottom: 2rem;
         position: relative;
         z-index: 2;
         box-shadow: 
-            0 5px 20px rgba(76, 29, 149, 0.4),
-            inset 0 0 10px rgba(255, 255, 255, 0.2);
+            0 5px 20px rgba(30, 41, 59, 0.3),
+            inset 0 0 10px rgba(255, 255, 255, 0.15);
         overflow: hidden;
     }
     
@@ -647,8 +729,8 @@
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.3), transparent);
-        transition: left 0.5s ease;
+        background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.25), transparent);
+        transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .login-button:hover::before {
@@ -658,9 +740,9 @@
     .login-button:hover {
         transform: translateY(-3px);
         box-shadow: 
-            0 10px 30px rgba(76, 29, 149, 0.5),
-            inset 0 0 15px rgba(34, 211, 238, 0.3);
-        background: linear-gradient(135deg, #2E1065 0%, #22D3EE 100%);
+            0 10px 30px rgba(30, 41, 59, 0.4),
+            inset 0 0 15px rgba(56, 189, 248, 0.2);
+        background: linear-gradient(135deg, #475569 0%, #38bdf8 100%);
     }
     
     .login-button:active {
@@ -689,25 +771,25 @@
     }
     
     .register-link {
-        color: #6B7280;
+        color: #6b7280;
         text-decoration: none;
         font-weight: 700;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .register-link:hover {
-        color: #EC4899;
+        color: #6366f1;
         text-decoration: underline;
-        text-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+        text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
     }
     
     .dark-mode .register-link {
-        color: #D1D5DB;
+        color: #d1d5db;
     }
     
     .dark-mode .register-link:hover {
-        color: #22D3EE;
-        text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+        color: #38bdf8;
+        text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
     }
     
     /* Error Message Styling */
@@ -1105,23 +1187,6 @@
                         <span>Financial reporting</span>
                     </div>
                 </div>
-                <!-- Professional Builder Section -->
-                <div class="builder-section">
-                    <div>
-                        <img src="{{ url_for('static', filename='me.jpeg') }}" alt="App Builder">
-                    </div>
-                    <div>
-                        <strong>App built by:</strong><br>
-                        <span style="font-size:1.25rem;font-weight:700;">Ashish</span><br>
-                        <span style="font-size:1.05rem;opacity:0.88;">Studying at IIT Madras</span><br>
-                        <span style="font-size:1.01rem;opacity:0.7;">Contact: ashraj77777@gmail.com</span>
-                        <div style="margin-top:1.1rem; display:flex; justify-content:center; gap:1.2rem;">
-                            <a href="https://www.linkedin.com/in/ashish-raj-02a700259/" target="_blank"><i class="fab fa-linkedin"></i></a>
-                            <a href="https://www.instagram.com/ashraj77777" target="_blank"><i class="fab fa-instagram"></i></a>
-                            <a href="https://github.com/22f3000982" target="_blank"><i class="fab fa-github"></i></a>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
         
@@ -1180,4 +1245,259 @@
         </div>
     </div>
 </div>
+
+<!-- Professional Footer Section - About the Developer -->
+<style>
+    .developer-footer {
+        width: 100%;
+        background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+        color: white;
+        padding: 3rem 2rem 2rem 2rem;
+        margin-top: 0;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .developer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 300px 1fr 280px;
+        gap: 3rem;
+        align-items: start;
+    }
+    
+    .developer-profile {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .developer-profile img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    
+    .developer-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(45deg, #fbbf24, #f59e0b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .developer-title {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+        color: #e5e7eb;
+    }
+    
+    .developer-socials {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .developer-socials a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .developer-socials a:hover {
+        transform: translateY(-3px);
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .about-section {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2rem;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .about-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #fbbf24;
+    }
+    
+    .about-text {
+        line-height: 1.7;
+        opacity: 0.9;
+        margin-bottom: 1.5rem;
+    }
+    
+    .tech-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .tech-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .contact-section {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2rem;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .contact-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: #fbbf24;
+    }
+    
+    .contact-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0.8rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        transition: background 0.3s ease;
+    }
+    
+    .contact-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .contact-item i {
+        width: 20px;
+        margin-right: 1rem;
+        color: #fbbf24;
+    }
+    
+    .contact-item a {
+        color: white;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .contact-item a:hover {
+        color: #fbbf24;
+    }
+    
+    @media (max-width: 1024px) {
+        .developer-container {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            text-align: center;
+        }
+        
+        .developer-profile {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .developer-footer {
+            padding: 2rem 1rem;
+        }
+        
+        .developer-container {
+            gap: 1.5rem;
+        }
+        
+        .about-section,
+        .contact-section {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<div class="developer-footer">
+    <div class="developer-container">
+        <!-- Developer Profile -->
+        <div class="developer-profile">
+            <img src="{{ url_for('static', filename='me.jpeg') }}" alt="Ashish Raj - Developer">
+            <div class="developer-name">Ashish Raj</div>
+            <div class="developer-title">Computer Science Student<br>IIT Madras</div>
+            <div class="developer-socials">
+                <a href="https://www.linkedin.com/in/ashish-raj-02a700259/" target="_blank" title="LinkedIn">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="https://github.com/22f3000982" target="_blank" title="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://www.instagram.com/ashraj77777" target="_blank" title="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- About This Project -->
+        <div class="about-section">
+            <div class="about-title">About RentPro</div>
+            <div class="about-text">
+                RentPro is a comprehensive rental management system designed to streamline property management, tenant communications, and payment processing. Built with modern web technologies, it provides an intuitive interface for both property owners and tenants.
+            </div>
+            <div class="about-text">
+                This project showcases full-stack development skills, implementing features like automated billing, payment tracking, notification systems, and detailed reporting - all wrapped in a professional, responsive design.
+            </div>
+            <div class="tech-stack">
+                <span class="tech-item">Python Flask</span>
+                <span class="tech-item">SQLAlchemy</span>
+                <span class="tech-item">HTML5/CSS3</span>
+                <span class="tech-item">JavaScript</span>
+                <span class="tech-item">Bootstrap</span>
+                <span class="tech-item">SQLite</span>
+                <span class="tech-item">Jinja2</span>
+            </div>
+        </div>
+        
+        <!-- Contact Information -->
+        <div class="contact-section">
+            <div class="contact-title">Get In Touch</div>
+            <div class="contact-item">
+                <i class="fas fa-envelope"></i>
+                <a href="mailto:ashraj77777@gmail.com">ashraj77777@gmail.com</a>
+            </div>
+            <div class="contact-item">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Indian Institute of Technology Madras</span>
+            </div>
+            <div class="contact-item">
+                <i class="fas fa-code"></i>
+                <span>Full Stack Web Developer</span>
+            </div>
+            <div class="contact-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Chennai, Tamil Nadu, India</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
