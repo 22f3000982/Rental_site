@@ -167,22 +167,86 @@ def init_database():
     """Initialize database tables and create default data"""
     try:
         with app.app_context():
-            # Create all tables
+            # Create all tables (but don't drop existing ones)
             db.create_all()
             print("Database tables created successfully")
             
             # Run migrations
             migrate_database()
             
-            # Create default settings
+            # Create default settings (only if they don't exist)
             create_default_settings()
             
-            # Create default admin user
+            # Create default admin user (only if it doesn't exist)
             create_admin_user()
+            
+            # Check if we need to restore data from backup
+            restore_data_if_needed()
             
             print("Database initialization completed")
     except Exception as e:
         print(f"Database initialization error: {e}")
+
+def restore_data_if_needed():
+    """Restore data from backup if database is empty and backup exists"""
+    try:
+        # Check if we have any users (excluding admin)
+        user_count = User.query.filter_by(is_admin=False).count()
+        
+        if user_count == 0:
+            print("No renter users found, checking for backup...")
+            
+            # Look for backup files
+            backup_files = [
+                'current_users_backup.json',
+                'pre_deploy_backup_20250719_125842.json', 
+                'pre_deploy_backup_20250719_125821.json'
+            ]
+            
+            for backup_file in backup_files:
+                if os.path.exists(backup_file):
+                    print(f"Found backup file: {backup_file}, attempting restore...")
+                    restore_from_backup(backup_file)
+                    break
+            else:
+                print("No backup files found")
+                
+    except Exception as e:
+        print(f"Error during backup restore: {e}")
+
+def restore_from_backup(backup_file):
+    """Restore users and data from backup file"""
+    try:
+        with open(backup_file, 'r') as f:
+            backup_data = json.load(f)
+        
+        # Restore users
+        if 'users' in backup_data:
+            restored_count = 0
+            for user_data in backup_data['users']:
+                # Check if user already exists
+                existing_user = User.query.filter_by(username=user_data.get('username')).first()
+                if not existing_user:
+                    user = User(
+                        username=user_data.get('username'),
+                        email=user_data.get('email'),
+                        password_hash=user_data.get('password_hash'),
+                        room_number=user_data.get('room_number'),
+                        is_admin=user_data.get('is_admin', False),
+                        is_active=user_data.get('is_active', True)
+                    )
+                    db.session.add(user)
+                    restored_count += 1
+            
+            if restored_count > 0:
+                db.session.commit()
+                print(f"Successfully restored {restored_count} users from backup")
+            else:
+                print("No new users to restore")
+                
+    except Exception as e:
+        print(f"Error restoring from backup: {e}")
+        db.session.rollback()
 
 # Call init_database when the app starts
 init_database()
@@ -304,7 +368,25 @@ def renter_dashboard():
     
     # Get payment history
     rent_payments = RentPayment.query.filter_by(renter_id=current_user.id).order_by(RentPayment.year.desc(), RentPayment.month.desc()).limit(12).all()
-    electricity_bills = ElectricityBill.query.filter_by(renter_id=current_user.id).order_by(ElectricityBill.year.desc(), ElectricityBill.month.desc()).limit(12).all()
+    electricity_bills = ElectricityBill.query.filter_by(renter_id=current_user.id).order_by(ElectricityBill.id).limit(12).all()
+    
+    # Calculate cumulative units for electricity bills
+    # Get all electricity bills for this user in chronological order (oldest first)
+    all_user_bills = ElectricityBill.query.filter_by(
+        renter_id=current_user.id
+    ).order_by(ElectricityBill.id).all()
+    
+    # Calculate cumulative units for each bill (paid and unpaid)
+    cumulative_total = 0
+    
+    for bill in all_user_bills:
+        if bill.is_paid:
+            units_for_this_bill = bill.units_paid or bill.units_consumed or 0
+            cumulative_total += float(units_for_this_bill)
+        bill.cumulative_units = cumulative_total
+    
+    # Now sort electricity_bills by cumulative_units in descending order for display
+    electricity_bills.sort(key=lambda x: x.cumulative_units, reverse=True)
     
     # For simple mode, calculate payment summaries
     rent_summary = None
@@ -330,18 +412,24 @@ def renter_dashboard():
             'total_paid_months': RentPayment.query.filter_by(renter_id=current_user.id, is_paid=True).count()
         }
         
+        # Calculate the total cumulative units paid (sum of all paid units)
+        total_units_paid = 0
+        all_paid_electricity_bills = ElectricityBill.query.filter_by(
+            renter_id=current_user.id, 
+            is_paid=True
+        ).order_by(ElectricityBill.id).all()
+        
+        for paid_bill in all_paid_electricity_bills:
+            units_for_this_bill = paid_bill.units_paid or paid_bill.units_consumed or 0
+            total_units_paid += float(units_for_this_bill)
+
         electricity_summary = {
             'last_paid_month': last_paid_electricity.month if last_paid_electricity else None,
             'last_paid_year': last_paid_electricity.year if last_paid_electricity else None,
             'last_paid_units': last_paid_electricity.units_consumed if last_paid_electricity else 0,
             'last_paid_amount': last_paid_electricity.total_amount if last_paid_electricity else 0,
             'total_paid_bills': ElectricityBill.query.filter_by(renter_id=current_user.id, is_paid=True).count(),
-            # Show the meter reading up to which the user has paid (current_reading of last paid bill)
-            'total_units_paid': (
-                float(last_paid_electricity.meter_reading.current_reading or 0) 
-                if last_paid_electricity and last_paid_electricity.meter_reading 
-                else (float(last_paid_electricity.units_consumed or 0) if last_paid_electricity else 0)
-            )
+            'total_units_paid': total_units_paid  # Use the calculated cumulative total
         }
         
         # Get payment history for simple mode table
@@ -454,6 +542,7 @@ def renter_dashboard():
                          electricity_bill=electricity_bill,
                          rent_payments=rent_payments,
                          electricity_bills=electricity_bills,
+                         electricity_bills_sorted=electricity_bills,  # Add the sorted bills
                          notifications=notifications,
                          total_due=total_due,
                          current_month=current_month,
@@ -561,6 +650,9 @@ def confirm_payment(payment_type, payment_id):
     elif payment_type == 'electricity':
         payment.payment_status = 'pending'
         payment.payment_receipt = receipt_filename
+        # Set initial payment tracking values (will be confirmed on approval)
+        payment.amount_paid = payment.total_amount
+        payment.units_paid = payment.units_consumed
     
     payment.payment_date = datetime.now()
     payment.payment_method = request.form.get('payment_method', 'upi')
@@ -2155,6 +2247,7 @@ def verify_payment(payment_type, payment_id):
             payment.is_paid = True
             payment.payment_status = 'approved'
             payment.amount_paid = payment.total_amount
+            payment.units_paid = payment.units_consumed
         else:
             payment.payment_status = 'rejected'
     
@@ -2473,12 +2566,20 @@ def add_meter_reading():
     if form.validate_on_submit():
         renter = User.query.get(form.renter_id.data)
         
-        # Get previous reading
-        previous_reading = MeterReading.query.filter_by(
-            renter_id=renter.id
-        ).order_by(MeterReading.year.desc(), MeterReading.month.desc()).first()
+        # Get previous reading from the most recent PAID electricity bill
+        last_paid_bill = ElectricityBill.query.filter_by(
+            renter_id=renter.id,
+            is_paid=True
+        ).order_by(ElectricityBill.id.desc()).first()
         
-        previous_value = previous_reading.current_reading if previous_reading else 0
+        if last_paid_bill and last_paid_bill.meter_reading:
+            previous_value = last_paid_bill.meter_reading.current_reading
+        else:
+            # Fallback to any meter reading if no paid bills exist
+            previous_reading = MeterReading.query.filter_by(
+                renter_id=renter.id
+            ).order_by(MeterReading.year.desc(), MeterReading.month.desc()).first()
+            previous_value = previous_reading.current_reading if previous_reading else 0
         
         # Calculate units consumed
         units_consumed = form.current_reading.data - previous_value
@@ -2519,23 +2620,38 @@ def get_previous_reading(renter_id):
     if not current_user.is_admin:
         return jsonify({'error': 'Unauthorized'}), 403
     
-    # Get the most recent meter reading for this renter
-    previous_reading = MeterReading.query.filter_by(
-        renter_id=renter_id
-    ).order_by(MeterReading.year.desc(), MeterReading.month.desc()).first()
+    # Get the most recent PAID electricity bill for this renter to find the correct previous reading
+    last_paid_bill = ElectricityBill.query.filter_by(
+        renter_id=renter_id,
+        is_paid=True
+    ).order_by(ElectricityBill.id.desc()).first()
     
-    if previous_reading:
+    if last_paid_bill and last_paid_bill.meter_reading:
+        # Use the current_reading from the most recent paid bill's meter reading
+        previous_reading_value = last_paid_bill.meter_reading.current_reading
         return jsonify({
-            'previous_reading': previous_reading.current_reading,
-            'month': previous_reading.month,
-            'year': previous_reading.year
+            'previous_reading': previous_reading_value,
+            'month': last_paid_bill.month,
+            'year': last_paid_bill.year
         })
     else:
-        return jsonify({
-            'previous_reading': 0,
-            'month': None,
-            'year': None
-        })
+        # Fallback: check for any meter reading (paid or unpaid)
+        previous_reading = MeterReading.query.filter_by(
+            renter_id=renter_id
+        ).order_by(MeterReading.year.desc(), MeterReading.month.desc()).first()
+        
+        if previous_reading:
+            return jsonify({
+                'previous_reading': previous_reading.current_reading,
+                'month': previous_reading.month,
+                'year': previous_reading.year
+            })
+        else:
+            return jsonify({
+                'previous_reading': 0,
+                'month': None,
+                'year': None
+            })
 
 def add_watermark_to_canvas(canvas, width, height, renter_name=None):
     """Add most cursive handwritten text watermark to PDF canvas"""
@@ -3629,21 +3745,175 @@ def export_renter_payment_table_pdf(payment_records, user, year_filter, month_fi
 @login_required
 def chat_dashboard():
     """Chat dashboard for users"""
-    return render_template('chat_dashboard.html')
+    if current_user.is_admin:
+        # Admin sees all renters they can chat with
+        renters = User.query.filter_by(is_admin=False).all()
+        conversations = {}
+        for renter in renters:
+            conversations[renter.id] = {
+                'username': renter.username,
+                'room_number': renter.room_number,
+                'last_message': get_last_message(current_user.id, renter.id),
+                'unread_count': get_unread_count(current_user.id, renter.id)
+            }
+    else:
+        # Renters can only chat with admin
+        admin = User.query.filter_by(is_admin=True).first()
+        conversations = {}
+        if admin:
+            conversations[admin.id] = {
+                'username': admin.username,
+                'room_number': 'Admin',
+                'last_message': get_last_message(current_user.id, admin.id),
+                'unread_count': get_unread_count(current_user.id, admin.id)
+            }
+    
+    return render_template('chat_dashboard.html', conversations=conversations)
 
-@app.route('/chat/conversation/<int:conversation_id>')
+@app.route('/chat/conversation/<int:user_id>')
 @login_required
-def chat_conversation(conversation_id):
+def chat_conversation(user_id):
     """View specific chat conversation"""
-    # For now, just render the template with a basic conversation structure
-    return render_template('chat_conversation.html', conversation_id=conversation_id)
+    # Get the other user
+    other_user = User.query.get_or_404(user_id)
+    
+    # Security check: ensure proper access
+    if not current_user.is_admin and not other_user.is_admin:
+        flash('Access denied', 'error')
+        return redirect(url_for('chat_dashboard'))
+    
+    # Get messages between current user and other user
+    messages = ChatMessage.query.filter(
+        ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == user_id)) |
+        ((ChatMessage.sender_id == user_id) & (ChatMessage.recipient_id == current_user.id))
+    ).order_by(ChatMessage.created_at.asc()).all()
+    
+    # Mark messages as read
+    ChatMessage.query.filter(
+        ChatMessage.sender_id == user_id,
+        ChatMessage.recipient_id == current_user.id,
+        ChatMessage.is_read == False
+    ).update({'is_read': True})
+    db.session.commit()
+    
+    return render_template('chat_conversation.html', 
+                         other_user=other_user, 
+                         messages=messages,
+                         user_id=user_id)
+
+@app.route('/api/chat/send_message', methods=['POST'])
+@login_required
+def send_chat_message():
+    """Send a chat message"""
+    data = request.get_json()
+    
+    if not data or 'recipient_id' not in data or 'message' not in data:
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    recipient_id = data['recipient_id']
+    message_text = data['message'].strip()
+    
+    if not message_text:
+        return jsonify({'error': 'Message cannot be empty'}), 400
+    
+    # Get recipient
+    recipient = User.query.get(recipient_id)
+    if not recipient:
+        return jsonify({'error': 'Recipient not found'}), 404
+    
+    # Security check
+    if not current_user.is_admin and not recipient.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    # Create message
+    message = ChatMessage(
+        sender_id=current_user.id,
+        recipient_id=recipient_id,
+        message=message_text
+    )
+    
+    try:
+        db.session.add(message)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': {
+                'id': message.id,
+                'sender_id': message.sender_id,
+                'message': message.message,
+                'created_at': message.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'sender_name': current_user.username
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to send message'}), 500
+
+@app.route('/api/chat/get_messages/<int:user_id>')
+@login_required
+def get_chat_messages(user_id):
+    """Get messages for a conversation"""
+    # Security check
+    other_user = User.query.get(user_id)
+    if not other_user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    if not current_user.is_admin and not other_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    # Get messages
+    messages = ChatMessage.query.filter(
+        ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == user_id)) |
+        ((ChatMessage.sender_id == user_id) & (ChatMessage.recipient_id == current_user.id))
+    ).order_by(ChatMessage.created_at.asc()).all()
+    
+    message_list = []
+    for msg in messages:
+        message_list.append({
+            'id': msg.id,
+            'sender_id': msg.sender_id,
+            'message': msg.message,
+            'created_at': msg.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'sender_name': msg.sender.username,
+            'is_read': msg.is_read
+        })
+    
+    return jsonify({'messages': message_list})
 
 @app.route('/api/chat/unread_count')
 @login_required
 def chat_unread_count():
     """Get unread message count for current user"""
-    # For now, return 0 - this can be expanded later
-    return jsonify({'unread_count': 0})
+    unread_count = ChatMessage.query.filter(
+        ChatMessage.recipient_id == current_user.id,
+        ChatMessage.is_read == False
+    ).count()
+    
+    return jsonify({'unread_count': unread_count})
+
+def get_last_message(user1_id, user2_id):
+    """Get the last message between two users"""
+    last_message = ChatMessage.query.filter(
+        ((ChatMessage.sender_id == user1_id) & (ChatMessage.recipient_id == user2_id)) |
+        ((ChatMessage.sender_id == user2_id) & (ChatMessage.recipient_id == user1_id))
+    ).order_by(ChatMessage.created_at.desc()).first()
+    
+    if last_message:
+        return {
+            'message': last_message.message[:50] + ('...' if len(last_message.message) > 50 else ''),
+            'created_at': last_message.created_at,
+            'sender_name': last_message.sender.username
+        }
+    return None
+
+def get_unread_count(current_user_id, other_user_id):
+    """Get unread message count between two users"""
+    return ChatMessage.query.filter(
+        ChatMessage.sender_id == other_user_id,
+        ChatMessage.recipient_id == current_user_id,
+        ChatMessage.is_read == False
+    ).count()
 
 # Initialize database on app startup (for all environments)
 def initialize_database():

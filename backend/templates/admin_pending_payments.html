@@ -19,7 +19,7 @@
                                     <tr>
                                         <th>Renter</th>
                                         <th>Month/Year</th>
-                                        <th>Amount</th>
+                                        <th>Rent Amount</th>
                                         <th>Payment Method</th>
                                         <th>Transaction ID</th>
                                         <th>Submitted Date</th>
@@ -38,7 +38,12 @@
                                             {{ calendar.month_name[payment.month] }} {{ payment.year }}
                                         </td>
                                         <td>
-                                            <span class="badge bg-success">₹{{ "%.2f"|format(payment.amount) }}</span>
+                                            <div class="small">
+                                                <div><strong>Total:</strong> ₹{{ "%.2f"|format(payment.amount) }}</div>
+                                                {% if payment.amount == 0 %}
+                                                <div class="text-warning">⚠️ Amount not set</div>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                         <td>
                                             {{ payment.payment_method or 'N/A' }}
@@ -123,7 +128,7 @@
                                     <tr>
                                         <th>Renter</th>
                                         <th>Bill Month</th>
-                                        <th>Amount Paid</th>
+                                        <th>Bill Amount</th>
                                         <th>Units Paid</th>
                                         <th>Transaction ID</th>
                                         <th>Submitted Date</th>
@@ -142,7 +147,12 @@
                                             {{ calendar.month_name[payment.month] }} {{ payment.year }}
                                         </td>
                                         <td>
-                                            <span class="badge bg-success">₹{{ "%.2f"|format(payment.amount_paid) }}</span>
+                                            <div class="small">
+                                                <div><strong>Total:</strong> ₹{{ "%.2f"|format(payment.total_amount) }}</div>
+                                                {% if payment.amount_paid and payment.amount_paid > 0 %}
+                                                <div class="text-info">Paid: ₹{{ "%.2f"|format(payment.amount_paid) }}</div>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                         <td>
                                             {{ "%.2f"|format(payment.units_paid) }} units

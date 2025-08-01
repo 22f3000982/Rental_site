@@ -605,77 +605,173 @@
 </div>
 {% endif %}
 
-<!-- Enhanced Payment History -->
-{% if payment_history %}
-<div class="professional-card">
-    <div class="card-header border-0 bg-transparent pb-0">
-        <div class="d-flex justify-content-between align-items-center">
-            <h4><i class="fas fa-history me-2"></i>Payment History</h4>
-            <span class="badge bg-primary">{{ payment_history|length }} Records</span>
+<!-- Enhanced Payment Tables -->
+<div class="row g-4 mb-5">
+    <!-- Rent Payment History Table -->
+    <div class="col-lg-6">
+        <div class="professional-card">
+            <div class="card-header border-0 bg-transparent pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4><i class="fas fa-home me-2"></i>Rent Payment History</h4>
+                    <span class="badge bg-primary">{{ rent_payments|length if rent_payments else 0 }} Records</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                            <tr>
+                                <th class="border-0 ps-3">Period</th>
+                                <th class="border-0">Amount</th>
+                                <th class="border-0">Status</th>
+                                <th class="border-0 pe-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if rent_payments %}
+                                {% for payment in rent_payments[:8] %}
+                                <tr class="border-0">
+                                    <td class="ps-3 py-3">
+                                        <strong>{{ calendar.month_name[payment.month] }} {{ payment.year }}</strong>
+                                        {% if payment.payment_date %}
+                                        <br><small class="text-muted">{{ payment.payment_date.strftime('%d %b %Y') }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-success px-3">₹{{ "%.2f"|format(payment.amount) }}</span>
+                                    </td>
+                                    <td class="py-3">
+                                        {% if payment.is_paid %}
+                                            <span class="badge bg-success">Paid</span>
+                                        {% elif payment.payment_status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif payment.payment_status == 'rejected' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Due</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="pe-3 py-3">
+                                        {% if payment.is_paid %}
+                                            <a href="{{ url_for('generate_receipt', payment_type='rent', payment_id=payment.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" title="Download Receipt">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                        {% elif payment.payment_status == 'pending' %}
+                                            <small class="text-muted">Awaiting approval</small>
+                                        {% elif not payment.is_paid and payment.payment_status != 'pending' %}
+                                            <a href="{{ url_for('pay_bill', payment_type='rent', payment_id=payment.id) }}" 
+                                               class="btn btn-success btn-sm">
+                                                Pay
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <i class="fas fa-home fa-3x text-muted mb-3"></i>
+                                        <h6 class="text-muted">No rent payments yet</h6>
+                                        <p class="text-muted">Your rent records will appear here</p>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
-                    <tr>
-                        <th class="border-0 ps-4">Date</th>
-                        <th class="border-0">Period</th>
-                        <th class="border-0">Amount</th>
-                        <th class="border-0">Upto Units Paid</th>
-                        <th class="border-0">Status</th>
-                        <th class="border-0 pe-4">Receipt</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in payment_history %}
-                    <tr class="border-0">
-                        <td class="ps-4 py-3">
-                            <small class="text-muted">{{ record.date }}</small>
-                        </td>
-                        <td class="py-3">
-                            <strong>{{ record.month_year }}</strong>
-                        </td>
-                        <td class="py-3">
-                            <span class="badge bg-success px-3">₹{{ "%.2f"|format(record.amount) }}</span>
-                        </td>
-                        <td class="py-3">
-                            <span class="text-muted">{{ "%.1f"|format(record.units) }} units</span>
-                        </td>
-                        <td class="py-3">
-                            <span class="badge bg-light text-success">{{ record.status }}</span>
-                        </td>
-                        <td class="pe-4 py-3">
-                            <div class="btn-group" role="group">
-                                {% if record.rent_id %}
-                                <a href="{{ url_for('generate_receipt', payment_type='rent', payment_id=record.rent_id) }}" 
-                                   class="btn btn-outline-primary btn-sm" title="Download Rent Receipt">
-                                    <i class="fas fa-home"></i>
-                                </a>
-                                {% endif %}
-                                {% if record.electricity_id %}
-                                <a href="{{ url_for('generate_receipt', payment_type='electricity', payment_id=record.electricity_id) }}" 
-                                   class="btn btn-outline-info btn-sm" title="Download Electricity Receipt">
-                                    <i class="fas fa-bolt"></i>
-                                </a>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+    <!-- Electricity Bill History Table -->
+    <div class="col-lg-6">
+        <div class="professional-card">
+            <div class="card-header border-0 bg-transparent pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4><i class="fas fa-bolt me-2"></i>Electricity Bill History</h4>
+                    <span class="badge bg-warning">{{ electricity_bills|length if electricity_bills else 0 }} Records</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white;">
+                            <tr>
+                                <th class="border-0 ps-3">Units Paid Till</th>
+                                <th class="border-0">Amount</th>
+                                <th class="border-0">Status</th>
+                                <th class="border-0 pe-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if electricity_bills %}
+                                {% for bill in electricity_bills[:8] %}
+                                <tr class="border-0">
+                                    <td class="ps-3 py-3">
+                                        {% if bill.is_paid %}
+                                            <span class="badge bg-info px-3">{{ "%.1f"|format(bill.cumulative_units) }} units</span>
+                                            <br><small class="text-muted">+{{ "%.1f"|format(bill.units_paid or bill.units_consumed) }} this bill</small>
+                                        {% elif bill.payment_status == 'pending' %}
+                                            <span class="badge bg-warning px-3">{{ "%.1f"|format(bill.cumulative_units) }} units</span>
+                                            <br><small class="text-muted">+{{ "%.1f"|format(bill.units_paid or 0) }} pending</small>
+                                        {% else %}
+                                            <span class="badge bg-secondary px-3">{{ "%.1f"|format(bill.cumulative_units) }} units</span>
+                                            <br><small class="text-muted">{{ "%.1f"|format(bill.units_consumed) }} units due</small>
+                                        {% endif %}
+                                        {% if bill.payment_date %}
+                                        <br><small class="text-muted">{{ bill.payment_date.strftime('%d %b %Y') }}</small>
+                                        {% elif bill.month and bill.year %}
+                                        <br><small class="text-muted">{{ calendar.month_name[bill.month] }} {{ bill.year }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-success px-3">₹{{ "%.2f"|format(bill.total_amount) }}</span>
+                                    </td>
+                                    <td class="py-3">
+                                        {% if bill.is_paid %}
+                                            <span class="badge bg-success">Paid</span>
+                                        {% elif bill.payment_status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif bill.payment_status == 'rejected' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Due</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="pe-3 py-3">
+                                        {% if bill.is_paid %}
+                                            <a href="{{ url_for('generate_receipt', payment_type='electricity', payment_id=bill.id) }}" 
+                                               class="btn btn-outline-info btn-sm" title="Download Receipt">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                        {% elif bill.payment_status == 'pending' %}
+                                            <small class="text-muted">Awaiting approval</small>
+                                        {% elif not bill.is_paid and bill.payment_status != 'pending' %}
+                                            <a href="{{ url_for('pay_electricity_bill', bill_id=bill.id) }}" 
+                                               class="btn btn-warning btn-sm">
+                                                Pay
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <i class="fas fa-bolt fa-3x text-muted mb-3"></i>
+                                        <h6 class="text-muted">No electricity bills yet</h6>
+                                        <p class="text-muted">Your electricity records will appear here</p>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        {% if payment_history|length == 0 %}
-        <div class="text-center py-5">
-            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-            <h5 class="text-muted">No payment history available yet</h5>
-            <p class="text-muted">Your payment records will appear here</p>
-        </div>
-        {% endif %}
     </div>
 </div>
-{% endif %}
 
 <!-- Professional JavaScript Enhancements -->
 <script>
@@ -1113,28 +1209,35 @@ document.head.appendChild(style);
                             </tr>
                         </thead>
                         <tbody>
-                            {% for bill in electricity_bills[:5] %}
+                            {% for bill in electricity_bills_sorted[:5] %}
                             <tr>
                                 <td>{{ bill.month }}/{{ bill.year }}</td>
-                                <td>{{ bill.units_consumed }}</td>
+                                <td>{{ "%.1f"|format(bill.cumulative_units) }} units</td>
                                 <td>₹{{ "%.2f"|format(bill.total_amount) }}</td>
                                 <td>
                                     {% if bill.is_paid %}
                                         <span class="badge bg-success">Paid</span>
-                                    {% elif bill.units_paid and bill.units_paid > 0 %}
-                                        <span class="badge bg-info">Partial</span>
-                                    {% else %}
+                                    {% elif bill.payment_status == 'pending' %}
                                         <span class="badge bg-warning">Pending</span>
+                                    {% elif bill.payment_status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Due</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if not bill.is_paid %}
-                                        <a href="{{ url_for('pay_bill', payment_type='electricity', payment_id=bill.id) }}" 
-                                           class="btn btn-success btn-sm">
-                                            <i class="fas fa-credit-card me-1"></i>Pay
+                                    {% if bill.is_paid %}
+                                        <a href="{{ url_for('generate_receipt', payment_type='electricity', payment_id=bill.id) }}" 
+                                           class="btn btn-outline-info btn-sm" title="Download Receipt">
+                                            <i class="fas fa-download"></i>
                                         </a>
-                                    {% else %}
-                                        <small class="text-muted">-</small>
+                                    {% elif bill.payment_status == 'pending' %}
+                                        <small class="text-muted">Awaiting approval</small>
+                                    {% elif not bill.is_paid and bill.payment_status != 'pending' %}
+                                        <a href="{{ url_for('pay_electricity_bill', bill_id=bill.id) }}" 
+                                           class="btn btn-warning btn-sm">
+                                            Pay
+                                        </a>
                                     {% endif %}
                                 </td>
                             </tr>
