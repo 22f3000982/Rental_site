@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}JSON Backup System - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">📁 JSON Backup System (File Download/Upload)</h4>
+                    <div class="badge badge-success">Super Simple!</div>
+                </div>
+                <div class="card-body">
+                    <!-- Welcome Message -->
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle"></i> How It Works (Manual File Method):</h5>
+                        <ol>
+                            <li><strong>Create Backup:</strong> Click "Create JSON Backup" → Download the file</li>
+                            <li><strong>Before Deploy:</strong> Put the JSON file in your backend folder</li>
+                            <li><strong>Deploy:</strong> Push your code with the backup file</li>
+                            <li><strong>Restore:</strong> Click "Restore" - All users back!</li>
+                        </ol>
+                    </div>
+
+                    <!-- Step-by-Step Guide -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>📋 Step-by-Step Instructions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">🔽 Before Deployment:</h6>
+                                    <ol>
+                                        <li>Users register on your live site</li>
+                                        <li>Click <strong>"Create JSON Backup"</strong> below</li>
+                                        <li>Download the JSON file to your computer</li>
+                                        <li>Copy the JSON file to your <code>backend/</code> folder</li>
+                                        <li>Push your code: <code>git add .</code> → <code>git commit</code> → <code>git push</code></li>
+                                    </ol>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-success">🔼 After Deployment:</h6>
+                                    <ol>
+                                        <li>Open your deployed website admin panel</li>
+                                        <li>Go to JSON Backup section</li>
+                                        <li>Click <strong>"Restore from JSON"</strong></li>
+                                        <li>All users and data restored!</li>
+                                        <li>Delete the JSON file from backend folder (optional)</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Backup Status -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>💾 Current Backup Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            {% if backup_info.exists %}
+                                                <i class="fas fa-file-archive text-success fa-3x"></i>
+                                                <h6 class="mt-2">Latest Backup Available</h6>
+                                                <small class="text-muted">{{ backup_info.date }}</small><br>
+                                                <small class="text-muted">{{ backup_info.tables }} tables, {{ backup_info.records }} records</small>
+                                            {% else %}
+                                                <i class="fas fa-exclamation-triangle text-warning fa-3x"></i>
+                                                <h6 class="mt-2">No Backup Found</h6>
+                                                <small class="text-muted">Create your first JSON backup</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="col-md-6">
+                                    <div class="d-flex flex-column h-100 justify-content-center">
+                                        <!-- Create Backup Button -->
+                                        <form method="POST" class="mb-3">
+                                            <input type="hidden" name="action" value="create_backup">
+                                            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                                                <i class="fas fa-download"></i> 
+                                                Create JSON Backup<br>
+                                                <small>(Download File)</small>
+                                            </button>
+                                        </form>
+
+                                        <!-- Restore Button -->
+                                        <form method="POST">
+                                            <input type="hidden" name="action" value="restore_backup">
+                                            <button type="submit" class="btn btn-success btn-lg btn-block">
+                                                <i class="fas fa-upload"></i> 
+                                                Restore from JSON<br>
+                                                <small>(Upload File)</small>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Backups -->
+                    {% if available_backups %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>📂 Available Backup Files</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Filename</th>
+                                            <th>Date</th>
+                                            <th>Size</th>
+                                            <th>Location</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for backup in available_backups %}
+                                        <tr>
+                                            <td><code>{{ backup.filename }}</code></td>
+                                            <td>{{ backup.modified[:19] | replace('T', ' ') }}</td>
+                                            <td>{{ "%.1f KB" | format(backup.size / 1024) }}</td>
+                                            <td>
+                                                <span class="badge badge-info">
+                                                    {{ backup.location or 'json_backups' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('download_json_backup', filename=backup.filename) }}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-download"></i> Download
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Instructions Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>🎯 Your Workflow</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <i class="fas fa-download fa-2x text-primary mb-2"></i>
+                                        <h6>1. Backup</h6>
+                                        <p><small>Create JSON backup → Download file</small></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <i class="fas fa-folder fa-2x text-warning mb-2"></i>
+                                        <h6>2. Deploy</h6>
+                                        <p><small>Put JSON in backend/ folder → Push code</small></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <i class="fas fa-upload fa-2x text-success mb-2"></i>
+                                        <h6>3. Restore</h6>
+                                        <p><small>Click "Restore from JSON" → Users back!</small></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-success mt-3">
+                                <strong>🎉 Perfect!</strong> Simple file-based backup system - no API setup needed!
+                                <br><small><strong>Tip:</strong> Keep your backup files safe and dated for easy tracking</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Command Examples -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5>💻 Command Examples</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Deployment Commands:</h6>
+                            <pre class="bg-light p-3 rounded"><code># After putting JSON file in backend/ folder:
+git add .
+git commit -m "Deploy with backup file"
+git push origin master
+
+# Optional: Remove JSON file after successful restore
+# (You can do this through admin panel or manually)</code></pre>
+                            
+                            <h6 class="mt-3">File Structure:</h6>
+                            <pre class="bg-light p-3 rounded"><code>Rental_site/
+├── backend/
+│   ├── rental_backup_20250801_143022.json  ← Put backup file here
+│   ├── app.py
+│   └── ...
+├── json_backups/  ← Created automatically
+│   ├── latest_backup.json
+│   └── rental_backup_*.json
+└── ...</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Auto-check for JSON files in backend folder for restore
+    // You can add auto-detection logic here if needed
+});
+</script>
+
+{% endblock %}

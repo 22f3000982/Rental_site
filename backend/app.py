@@ -3136,53 +3136,149 @@ def admin_simple_backup():
     if not current_user.is_admin:
         return redirect(url_for('renter_dashboard'))
     
-    # Import the simple backup system
-    import sys
-    import os
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from simple_gdrive_backup import simple_backup
-    
-    if request.method == 'POST':
-        action = request.form.get('action')
+    try:
+        # Import the simple backup system
+        import sys
+        import os
         
-        if action == 'setup_folder':
-            folder_url = request.form.get('folder_url', '').strip()
-            if folder_url:
+        # Add parent directory to path to import simple_gdrive_backup
+        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if parent_dir not in sys.path:
+            sys.path.append(parent_dir)
+        
+        from simple_gdrive_backup import simple_backup
+        
+        if request.method == 'POST':
+            action = request.form.get('action')
+            
+            if action == 'setup_folder':
+                folder_url = request.form.get('folder_url', '').strip()
+                if folder_url:
+                    try:
+                        simple_backup.save_gdrive_folder(folder_url)
+                        flash('Google Drive folder URL saved successfully!', 'success')
+                    except Exception as e:
+                        flash(f'Error saving folder URL: {str(e)}', 'error')
+                else:
+                    flash('Please provide a valid Google Drive folder URL', 'error')
+            
+            elif action == 'create_backup':
                 try:
-                    simple_backup.save_gdrive_folder(folder_url)
-                    flash('Google Drive folder URL saved successfully!', 'success')
+                    result = simple_backup.create_backup()
+                    if result['success']:
+                        flash(f'✅ {result["message"]}', 'success')
+                    else:
+                        flash(f'❌ {result["message"]}', 'error')
                 except Exception as e:
-                    flash(f'Error saving folder URL: {str(e)}', 'error')
-            else:
-                flash('Please provide a valid Google Drive folder URL', 'error')
+                    flash(f'Error creating backup: {str(e)}', 'error')
+            
+            elif action == 'restore_backup':
+                try:
+                    result = simple_backup.restore_backup()
+                    if result['success']:
+                        flash(f'✅ {result["message"]}', 'success')
+                    else:
+                        flash(f'❌ {result["message"]}', 'error')
+                except Exception as e:
+                    flash(f'Error restoring backup: {str(e)}', 'error')
         
-        elif action == 'create_backup':
-            try:
-                result = simple_backup.create_backup()
-                if result['success']:
-                    flash(f'✅ {result["message"]}', 'success')
-                else:
-                    flash(f'❌ {result["message"]}', 'error')
-            except Exception as e:
-                flash(f'Error creating backup: {str(e)}', 'error')
+        # Get backup information
+        try:
+            backup_info = simple_backup.get_backup_info()
+            folder_url = simple_backup.backup_folder_url
+        except Exception as e:
+            backup_info = {"exists": False}
+            folder_url = ""
+            print(f"Error getting backup info: {str(e)}")
         
-        elif action == 'restore_backup':
-            try:
-                result = simple_backup.restore_backup()
-                if result['success']:
-                    flash(f'✅ {result["message"]}', 'success')
-                else:
-                    flash(f'❌ {result["message"]}', 'error')
-            except Exception as e:
-                flash(f'Error restoring backup: {str(e)}', 'error')
+        return render_template('admin_simple_backup.html', 
+                             backup_info=backup_info, 
+                             folder_url=folder_url)
     
-    # Get backup information
-    backup_info = simple_backup.get_backup_info()
-    folder_url = simple_backup.backup_folder_url
+    except Exception as e:
+        # If simple backup fails, show error message
+        flash('Simple backup system is temporarily unavailable. Please use JSON backup instead.', 'warning')
+        return redirect(url_for('admin_json_backup'))
+
+@app.route('/admin/json_backup', methods=['GET', 'POST'])
+@login_required
+def admin_json_backup():
+    """JSON file backup system - download/upload manually"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
     
-    return render_template('admin_simple_backup.html', 
-                         backup_info=backup_info, 
-                         folder_url=folder_url)
+    try:
+        # Import JSON backup manager
+        import sys
+        import os
+        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if parent_dir not in sys.path:
+            sys.path.append(parent_dir)
+        
+        from json_backup_manager import json_backup_manager
+        
+        if request.method == 'POST':
+            action = request.form.get('action')
+            
+            if action == 'create_backup':
+                try:
+                    result = json_backup_manager.create_json_backup()
+                    if result['success']:
+                        flash(f'✅ {result["message"]}', 'success')
+                    else:
+                        flash(f'❌ {result["message"]}', 'error')
+                except Exception as e:
+                    flash(f'Error creating JSON backup: {str(e)}', 'error')
+            
+            elif action == 'restore_backup':
+                try:
+                    result = json_backup_manager.restore_from_json()
+                    if result['success']:
+                        flash(f'✅ {result["message"]}', 'success')
+                    else:
+                        flash(f'❌ {result["message"]}', 'error')
+                except Exception as e:
+                    flash(f'Error restoring from JSON: {str(e)}', 'error')
+        
+        # Get backup information
+        backup_info = json_backup_manager.get_backup_info()
+        available_backups = json_backup_manager.list_available_backups()
+        
+        return render_template('admin_json_backup.html', 
+                             backup_info=backup_info,
+                             available_backups=available_backups)
+    
+    except Exception as e:
+        flash(f'JSON backup system error: {str(e)}', 'error')
+        return redirect(url_for('admin_settings'))
+
+@app.route('/admin/download_json_backup/<filename>')
+@login_required
+def download_json_backup(filename):
+    """Download JSON backup file"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    try:
+        import sys
+        import os
+        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if parent_dir not in sys.path:
+            sys.path.append(parent_dir)
+        
+        from json_backup_manager import json_backup_manager
+        
+        # Check if file exists in backup folder
+        backup_path = os.path.join(json_backup_manager.backup_folder, filename)
+        if os.path.exists(backup_path):
+            return send_file(backup_path, as_attachment=True, download_name=filename)
+        else:
+            flash('Backup file not found!', 'error')
+            return redirect(url_for('admin_json_backup'))
+    
+    except Exception as e:
+        flash(f'Error downloading backup: {str(e)}', 'error')
+        return redirect(url_for('admin_json_backup'))
 
 @app.route('/admin/check_restore_needed')
 @login_required
