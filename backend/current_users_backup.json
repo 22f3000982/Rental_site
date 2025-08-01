@@ -1,22 +1,24 @@
 {
-  "users": {
-    "columns": [
-      "id",
-      "username",
-      "email",
-      "password_hash",
-      "date_created"
-    ],
-    "data": [
-      [
-        1,
-        "Ashish",
-        "ashraj77777@gmail.com",
-        "pbkdf2:sha256:600000$sq6K4UWWqMaEqmpl$8b769dc56e64c38cad8dcbc3889e49ae462b7c691e28e525d668f508f95a24e1",
-        "2025-07-17 05:25:44.316499"
-      ]
-    ]
-  },
-  "settings": null,
-  "meter_readings": null
+  "users": [
+    {
+      "username": "user1@gmail.com",
+      "email": "user1@gmail.com",
+      "password_hash": "pbkdf2:sha256:600000$nG7GuVEboiTSc6lM$d898326d51d287869199569faac61a16fbab778d125cf0f32d857eaa491d55ac",
+      "room_number": "102",
+      "is_admin": false,
+      "is_active": true,
+      "created_at": "2025-07-26 03:59:30.997057"
+    },
+    {
+      "username": "user8",
+      "email": "user8@gmail.com",
+      "password_hash": "pbkdf2:sha256:600000$iSDmoFZwa1qzD68c$fba4d23e20e9a337cd42f088d72fd200abaa45157b88dc3fe6926b8938da391d",
+      "room_number": "107",
+      "is_admin": false,
+      "is_active": true,
+      "created_at": "2025-08-01 13:36:06.286106"
+    }
+  ],
+  "backup_timestamp": "2025-08-01 20:50:54.866750",
+  "user_count": 2
 }

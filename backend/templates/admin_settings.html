@@ -114,6 +114,56 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Data Backup Section -->
+                <div class="mt-5">
+                    <h5>
+                        <i class="fas fa-database me-2"></i>
+                        Data Backup & Restore
+                    </h5>
+                    <p class="text-muted">Protect your data from being lost during deployments. Create backups of all user data, payments, and system information.</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-download fa-3x text-primary mb-3"></i>
+                                    <h6>Create Backup</h6>
+                                    <p class="small text-muted">Generate a backup file with all user data, payments, and system settings.</p>
+                                    <a href="{{ url_for('admin_create_backup') }}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-1"></i>
+                                        Create Backup
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-download fa-3x text-success mb-3"></i>
+                                    <h6>Download Backup</h6>
+                                    <p class="small text-muted">Download the current backup file to keep it safe offline.</p>
+                                    <a href="{{ url_for('admin_download_backup') }}" class="btn btn-success">
+                                        <i class="fas fa-download me-1"></i>
+                                        Download Backup
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> 
+                        <ul class="mb-0 mt-2">
+                            <li>Always create a backup before making major changes or deployments</li>
+                            <li>The system automatically creates backups when deployed to production</li>
+                            <li>Backups include all user data, payments, meter readings, and chat messages</li>
+                            <li>Store backup files safely - they contain sensitive user information</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

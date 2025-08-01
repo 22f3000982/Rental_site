@@ -14,14 +14,14 @@ if os.path.exists(db_path):
         print(f'Table: {table[0]}')
     
     # Check users table if it exists
-    if any('users' in str(table) for table in tables):
-        cursor.execute('SELECT id, username, email, date_created FROM users')
+    if any('user' in str(table) for table in tables):
+        cursor.execute('SELECT id, username, email, created_at, room_number, is_admin FROM user')
         users = cursor.fetchall()
         print('\nCurrent users in database:')
         for user in users:
-            print(f'ID: {user[0]}, Username: {user[1]}, Email: {user[2]}, Date: {user[3]}')
+            print(f'ID: {user[0]}, Username: {user[1]}, Email: {user[2]}, Room: {user[4]}, Admin: {user[5]}')
     else:
-        print('\nNo users table found!')
+        print('\nNo user table found!')
     
     conn.close()
 else:

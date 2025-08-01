@@ -196,12 +196,32 @@ def restore_data_if_needed():
         if user_count == 0:
             print("No renter users found, checking for backup...")
             
-            # Look for backup files
-            backup_files = [
-                'current_users_backup.json',
+            # Look for backup files (newest first)
+            backup_files = []
+            
+            # Add current backup
+            if os.path.exists('current_users_backup.json'):
+                backup_files.append('current_users_backup.json')
+            
+            if os.path.exists('current_backup.json'):
+                backup_files.append('current_backup.json')
+            
+            # Add any pre_deploy backup files
+            import glob
+            pre_deploy_files = glob.glob('pre_deploy_backup_*.json')
+            pre_deploy_files.sort(reverse=True)  # newest first
+            backup_files.extend(pre_deploy_files)
+            
+            # Add older backup files
+            older_files = [
                 'pre_deploy_backup_20250719_125842.json', 
                 'pre_deploy_backup_20250719_125821.json'
             ]
+            for f in older_files:
+                if os.path.exists(f) and f not in backup_files:
+                    backup_files.append(f)
+            
+            print(f"Found backup files: {backup_files}")
             
             for backup_file in backup_files:
                 if os.path.exists(backup_file):
@@ -220,9 +240,65 @@ def restore_from_backup(backup_file):
         with open(backup_file, 'r') as f:
             backup_data = json.load(f)
         
-        # Restore users
-        if 'users' in backup_data:
-            restored_count = 0
+        restored_count = 0
+        
+        # Handle new backup format (table-based)
+        if 'user' in backup_data and 'columns' in backup_data['user']:
+            print("Using new backup format...")
+            user_data = backup_data['user']
+            columns = user_data['columns']
+            rows = user_data['data']
+            
+            for row in rows:
+                # Create a dictionary from columns and row data
+                user_dict = dict(zip(columns, row))
+                
+                # Check if user already exists
+                existing_user = User.query.filter_by(username=user_dict.get('username')).first()
+                if not existing_user:
+                    user = User(
+                        username=user_dict.get('username'),
+                        email=user_dict.get('email'),
+                        password_hash=user_dict.get('password_hash'),
+                        password_plain=user_dict.get('password_plain'),
+                        is_admin=bool(user_dict.get('is_admin', False)),
+                        is_active=bool(user_dict.get('is_active', True)),
+                        is_approved=bool(user_dict.get('is_approved', True)),
+                        rent_amount=float(user_dict.get('rent_amount', 0.0)),
+                        room_number=user_dict.get('room_number'),
+                        phone=user_dict.get('phone'),
+                        full_name=user_dict.get('full_name'),
+                        profile_picture=user_dict.get('profile_picture'),
+                        address=user_dict.get('address'),
+                        emergency_contact_name=user_dict.get('emergency_contact_name'),
+                        emergency_contact_phone=user_dict.get('emergency_contact_phone'),
+                        occupation=user_dict.get('occupation'),
+                        aadhar_number=user_dict.get('aadhar_number'),
+                        pan_number=user_dict.get('pan_number'),
+                        profile_completion=int(user_dict.get('profile_completion', 0)),
+                        document_verification_status=user_dict.get('document_verification_status', 'pending')
+                    )
+                    
+                    # Handle datetime fields
+                    if user_dict.get('created_at'):
+                        try:
+                            user.created_at = datetime.fromisoformat(user_dict['created_at'].replace('Z', '+00:00'))
+                        except:
+                            pass
+                    
+                    if user_dict.get('last_login'):
+                        try:
+                            user.last_login = datetime.fromisoformat(user_dict['last_login'].replace('Z', '+00:00'))
+                        except:
+                            pass
+                    
+                    db.session.add(user)
+                    restored_count += 1
+                    print(f"Restored user: {user_dict.get('username')} (Room: {user_dict.get('room_number')})")
+        
+        # Handle old backup format (users array)
+        elif 'users' in backup_data:
+            print("Using old backup format...")
             for user_data in backup_data['users']:
                 # Check if user already exists
                 existing_user = User.query.filter_by(username=user_data.get('username')).first()
@@ -237,19 +313,169 @@ def restore_from_backup(backup_file):
                     )
                     db.session.add(user)
                     restored_count += 1
-            
-            if restored_count > 0:
-                db.session.commit()
-                print(f"Successfully restored {restored_count} users from backup")
-            else:
-                print("No new users to restore")
+        
+        if restored_count > 0:
+            db.session.commit()
+            print(f"Successfully restored {restored_count} users from backup")
+        else:
+            print("No new users to restore")
                 
     except Exception as e:
         print(f"Error restoring from backup: {e}")
         db.session.rollback()
 
+def create_database_backup():
+    """Create a backup of all important data"""
+    try:
+        backup_data = {
+            'users': [],
+            'meter_readings': [],
+            'electricity_bills': [],
+            'rent_payments': [],
+            'chat_messages': [],
+            'notifications': [],
+            'system_settings': []
+        }
+        
+        # Backup users
+        users = User.query.all()
+        for user in users:
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'password_hash': user.password_hash,
+                'password_plain': user.password_plain,
+                'is_admin': user.is_admin,
+                'is_active': user.is_active,
+                'is_approved': user.is_approved,
+                'created_at': user.created_at.isoformat() if user.created_at else None,
+                'last_login': user.last_login.isoformat() if user.last_login else None,
+                'rent_amount': float(user.rent_amount) if user.rent_amount else 0.0,
+                'room_number': user.room_number,
+                'phone': user.phone,
+                'full_name': user.full_name,
+                'profile_picture': user.profile_picture,
+                'address': user.address,
+                'emergency_contact_name': user.emergency_contact_name,
+                'emergency_contact_phone': user.emergency_contact_phone,
+                'occupation': user.occupation,
+                'aadhar_number': user.aadhar_number,
+                'pan_number': user.pan_number,
+                'profile_completion': user.profile_completion,
+                'document_verification_status': user.document_verification_status
+            }
+            backup_data['users'].append(user_data)
+        
+        # Backup meter readings
+        readings = MeterReading.query.all()
+        for reading in readings:
+            reading_data = {
+                'id': reading.id,
+                'renter_id': reading.renter_id,
+                'current_reading': float(reading.current_reading),
+                'previous_reading': float(reading.previous_reading),
+                'date_recorded': reading.date_recorded.isoformat() if reading.date_recorded else None,
+                'reading_type': reading.reading_type,
+                'notes': reading.notes
+            }
+            backup_data['meter_readings'].append(reading_data)
+        
+        # Backup electricity bills
+        bills = ElectricityBill.query.all()
+        for bill in bills:
+            bill_data = {
+                'id': bill.id,
+                'renter_id': bill.renter_id,
+                'amount': float(bill.amount),
+                'current_reading': float(bill.current_reading),
+                'previous_reading': float(bill.previous_reading),
+                'units_consumed': float(bill.units_consumed),
+                'rate_per_unit': float(bill.rate_per_unit),
+                'due_date': bill.due_date.isoformat() if bill.due_date else None,
+                'is_paid': bill.is_paid,
+                'payment_date': bill.payment_date.isoformat() if bill.payment_date else None,
+                'created_at': bill.created_at.isoformat() if bill.created_at else None,
+                'bill_month': bill.bill_month,
+                'bill_year': bill.bill_year,
+                'payment_method': bill.payment_method,
+                'is_verified': bill.is_verified,
+                'verified_by': bill.verified_by,
+                'verified_at': bill.verified_at.isoformat() if bill.verified_at else None
+            }
+            backup_data['electricity_bills'].append(bill_data)
+        
+        # Backup rent payments
+        rent_payments = RentPayment.query.all()
+        for payment in rent_payments:
+            payment_data = {
+                'id': payment.id,
+                'renter_id': payment.renter_id,
+                'amount': float(payment.amount),
+                'payment_date': payment.payment_date.isoformat() if payment.payment_date else None,
+                'payment_method': payment.payment_method,
+                'transaction_id': payment.transaction_id,
+                'is_verified': payment.is_verified,
+                'verified_by': payment.verified_by,
+                'verified_at': payment.verified_at.isoformat() if payment.verified_at else None,
+                'created_at': payment.created_at.isoformat() if payment.created_at else None,
+                'rent_month': payment.rent_month,
+                'rent_year': payment.rent_year
+            }
+            backup_data['rent_payments'].append(payment_data)
+        
+        # Backup chat messages
+        messages = ChatMessage.query.all()
+        for message in messages:
+            message_data = {
+                'id': message.id,
+                'sender_id': message.sender_id,
+                'recipient_id': message.recipient_id,
+                'message': message.message,
+                'created_at': message.created_at.isoformat() if message.created_at else None,
+                'is_read': message.is_read
+            }
+            backup_data['chat_messages'].append(message_data)
+        
+        # Create backup filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_filename = f'backup_{timestamp}.json'
+        
+        # Save backup
+        with open(backup_filename, 'w') as f:
+            json.dump(backup_data, f, indent=2)
+        
+        # Also save as current_backup.json for easy access
+        with open('current_backup.json', 'w') as f:
+            json.dump(backup_data, f, indent=2)
+        
+        print(f"Database backup created: {backup_filename}")
+        return backup_filename
+        
+    except Exception as e:
+        print(f"Error creating backup: {e}")
+        return None
+
+def auto_backup_before_deployment():
+    """Automatically create backup before deployment"""
+    try:
+        # Check if this is a production environment (Railway, Render, etc.)
+        is_production = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RENDER') or os.environ.get('DYNO')
+        
+        if is_production:
+            print("Production environment detected, creating automatic backup...")
+            backup_file = create_database_backup()
+            if backup_file:
+                print(f"Automatic backup created: {backup_file}")
+        
+    except Exception as e:
+        print(f"Error in auto backup: {e}")
+
 # Call init_database when the app starts
 init_database()
+
+# Create automatic backup on startup in production
+auto_backup_before_deployment()
 
 @app.route('/')
 def index():
@@ -2885,6 +3111,41 @@ def admin_settings():
         return redirect(url_for('admin_settings'))
     
     return render_template('admin_settings.html', form=form, settings=settings)
+
+@app.route('/admin/create_backup')
+@login_required
+def admin_create_backup():
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    try:
+        backup_file = create_database_backup()
+        if backup_file:
+            flash(f'Database backup created successfully: {backup_file}', 'success')
+        else:
+            flash('Failed to create backup!', 'error')
+    except Exception as e:
+        flash(f'Error creating backup: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_settings'))
+
+@app.route('/admin/download_backup')
+@login_required
+def admin_download_backup():
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    try:
+        backup_file = 'current_backup.json'
+        if os.path.exists(backup_file):
+            return send_file(backup_file, as_attachment=True, 
+                           download_name=f'database_backup_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
+        else:
+            flash('No backup file found! Please create a backup first.', 'error')
+            return redirect(url_for('admin_settings'))
+    except Exception as e:
+        flash(f'Error downloading backup: {str(e)}', 'error')
+        return redirect(url_for('admin_settings'))
 
 @app.route('/admin/historical_data')
 @login_required
