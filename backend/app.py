@@ -3799,12 +3799,50 @@ def chat_conversation(user_id):
     return render_template('chat_conversation.html', 
                          other_user=other_user, 
                          messages=messages,
+                         form=ChatMessageForm(),
                          user_id=user_id)
+
+@app.route('/chat/send_message/<int:user_id>', methods=['POST'])
+@login_required
+def send_chat_message(user_id):
+    """Send a chat message via form"""
+    form = ChatMessageForm()
+    other_user = User.query.get_or_404(user_id)
+    
+    if form.validate_on_submit():
+        message_text = form.message.data.strip()
+        
+        if message_text:
+            # Security check
+            if not current_user.is_admin and not other_user.is_admin:
+                flash('Access denied', 'error')
+                return redirect(url_for('chat_dashboard'))
+            
+            # Create message
+            message = ChatMessage(
+                sender_id=current_user.id,
+                recipient_id=user_id,
+                message=message_text
+            )
+            
+            try:
+                db.session.add(message)
+                db.session.commit()
+                flash('Message sent successfully!', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash('Failed to send message. Please try again.', 'error')
+        else:
+            flash('Message cannot be empty.', 'error')
+    else:
+        flash('Invalid form data.', 'error')
+    
+    return redirect(url_for('chat_conversation', user_id=user_id))
 
 @app.route('/api/chat/send_message', methods=['POST'])
 @login_required
-def send_chat_message():
-    """Send a chat message"""
+def api_send_chat_message():
+    """Send a chat message via API"""
     data = request.get_json()
     
     if not data or 'recipient_id' not in data or 'message' not in data:
