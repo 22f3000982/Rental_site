@@ -127,7 +127,7 @@
                         <div class="card-body">
                             <p class="text-muted">
                                 <strong>Most Reliable!</strong> Direct database file backup - no JSON parsing, no complex setup. 
-                                Just copy the database file and restore it. Works everywhere!
+                                Just copy the database file and restore it. Works everywhere! All times shown in IST.
                             </p>
                             
                             <div class="alert alert-success mb-3">
@@ -139,7 +139,8 @@
                                 </ol>
                                 <small class="text-muted">
                                     <strong>📁 File Location:</strong> Place your backup file in <code>backend/simple_backups/latest_backup.db</code><br>
-                                    <strong>🚀 Auto-Restore:</strong> System will automatically find and restore your backup!
+                                    <strong>🚀 Auto-Restore:</strong> System will automatically find and restore your backup!<br>
+                                    <strong>🕐 All timestamps in IST (Indian Standard Time)</strong>
                                 </small>
                             </div>
                             
@@ -147,7 +148,7 @@
                                 <a href="{{ url_for('admin_simple_db_backup') }}" class="btn btn-primary btn-lg">
                                     <i class="fas fa-database me-2"></i>
                                     Open Database Backup
-                                    <br><small>Direct File Copying</small>
+                                    <br><small>Direct File Copying with IST</small>
                                 </a>
                             </div>
                             
@@ -156,128 +157,11 @@
                                     ✅ No JSON parsing issues<br>
                                     ✅ Works on all environments<br>
                                     ✅ Most reliable method<br>
-                                    ✅ Direct database file operations
+                                    ✅ Direct database file operations<br>
+                                    ✅ IST timezone support
                                 </small>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- WhatsApp-Style Simple Backup Section -->
-                <div class="mt-4">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-cloud me-2"></i>
-                                📱 WhatsApp-Style Simple Backup
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="text-muted">
-                                <strong>Super Simple!</strong> Just like WhatsApp backup - one click backup to Google Drive, 
-                                auto-restore when you deploy. No complex setup needed!
-                            </p>
-                            
-                            <div class="d-flex justify-content-center">
-                                <a href="{{ url_for('admin_simple_backup') }}" class="btn btn-success btn-lg">
-                                    <i class="fas fa-cloud-upload-alt me-2"></i>
-                                    Open Simple Backup
-                                    <br><small>Like WhatsApp Backup</small>
-                                </a>
-                            </div>
-                            
-                            <div class="text-center mt-3">
-                                <small class="text-muted">
-                                    ✅ No Google API setup needed<br>
-                                    ✅ Works with any Google Drive folder<br>
-                                    ✅ Auto-restore popup after deployment
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- JSON Backup Section -->
-                <div class="mt-4">
-                    <div class="card">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-file-archive me-2"></i>
-                                📁 JSON Backup System (File Download/Upload)
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="text-muted">
-                                <strong>Manual File Method:</strong> Download JSON backup file, put it in backend folder before deployment, 
-                                then restore after deployment. Perfect for manual control!
-                            </p>
-                            
-                            <div class="d-flex justify-content-center">
-                                <a href="{{ url_for('admin_json_backup') }}" class="btn btn-info btn-lg">
-                                    <i class="fas fa-download me-2"></i>
-                                    Open JSON Backup
-                                    <br><small>Download/Upload Files</small>
-                                </a>
-                            </div>
-                            
-                            <div class="text-center mt-3">
-                                <small class="text-muted">
-                                    ✅ No external services needed<br>
-                                    ✅ Full manual control<br>
-                                    ✅ Works everywhere
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Data Backup Section -->
-                <div class="mt-5">
-                    <h5>
-                        <i class="fas fa-database me-2"></i>
-                        Data Backup & Restore
-                    </h5>
-                    <p class="text-muted">Protect your data from being lost during deployments. Create backups of all user data, payments, and system information.</p>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card border-primary">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-download fa-3x text-primary mb-3"></i>
-                                    <h6>Create Backup</h6>
-                                    <p class="small text-muted">Generate a backup file with all user data, payments, and system settings.</p>
-                                    <a href="{{ url_for('admin_create_backup') }}" class="btn btn-primary">
-                                        <i class="fas fa-plus me-1"></i>
-                                        Create Backup
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="card border-success">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-file-download fa-3x text-success mb-3"></i>
-                                    <h6>Download Backup</h6>
-                                    <p class="small text-muted">Download the current backup file to keep it safe offline.</p>
-                                    <a href="{{ url_for('admin_download_backup') }}" class="btn btn-success">
-                                        <i class="fas fa-download me-1"></i>
-                                        Download Backup
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-info mt-3">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Important:</strong> 
-                        <ul class="mb-0 mt-2">
-                            <li>Always create a backup before making major changes or deployments</li>
-                            <li>The system automatically creates backups when deployed to production</li>
-                            <li>Backups include all user data, payments, meter readings, and chat messages</li>
-                            <li>Store backup files safely - they contain sensitive user information</li>
-                        </ul>
                     </div>
                 </div>
             </div>

@@ -2,13 +2,17 @@
 🚀 Simple Database Backup - Just Works!
 No complex file detection, no JSON parsing issues.
 Direct database export/import using SQL.
+All times in IST (Indian Standard Time).
 """
 
 import os
 import sqlite3
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from flask import current_app
+
+# IST timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
 
 class SimpleDatabaseBackup:
     """Ultra-simple database backup system"""
@@ -47,8 +51,8 @@ class SimpleDatabaseBackup:
             
             print(f"📂 Database found at: {db_path}")
             
-            # Create timestamped backup filename
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            # Create timestamped backup filename with IST
+            timestamp = datetime.now(IST).strftime('%Y%m%d_%H%M%S_IST')
             backup_filename = f"simple_backup_{timestamp}.db"
             backup_path = os.path.join(self.backup_folder, backup_filename)
             
@@ -108,7 +112,7 @@ class SimpleDatabaseBackup:
                 return {"success": False, "message": "Database not found"}
             
             # Create backup of current database first
-            current_backup = f"current_db_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+            current_backup = f"current_db_backup_{datetime.now(IST).strftime('%Y%m%d_%H%M%S_IST')}.db"
             if os.path.exists(db_path):
                 shutil.copy2(db_path, current_backup)
                 print(f"💾 Current database backed up as: {current_backup}")
@@ -156,7 +160,7 @@ class SimpleDatabaseBackup:
                     backups.append({
                         'filename': file,
                         'size': stat.st_size,
-                        'modified': datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                        'modified': datetime.fromtimestamp(stat.st_mtime, IST).strftime('%Y-%m-%d %H:%M:%S IST'),
                         'is_latest': file == 'latest_backup.db'
                     })
         

@@ -18,8 +18,8 @@
                         <ul class="mb-0">
                             <li><strong>Create Backup:</strong> Click button → Database file copied instantly</li>
                             <li><strong>Download:</strong> Get the backup file to save on your computer</li>
-                            <li><strong>Before Deploy:</strong> Upload the backup file to your project</li>
-                            <li><strong>Restore:</strong> Click restore → All data back instantly!</li>
+                            <li><strong>Upload & Restore:</strong> Choose your backup file and restore instantly</li>
+                            <li><strong>All times in IST:</strong> Indian Standard Time (UTC+5:30)</li>
                         </ul>
                     </div>
 
@@ -38,7 +38,7 @@
                                                 <h6 class="mt-2">Backup Available</h6>
                                                 <small class="text-muted">{{ backup_info.filename }}</small><br>
                                                 <small class="text-muted">{{ backup_info.size }} bytes</small><br>
-                                                <small class="text-muted">{{ backup_info.date }}</small>
+                                                <small class="text-muted">{{ backup_info.date }} IST</small>
                                             {% else %}
                                                 <i class="fas fa-exclamation-triangle text-warning fa-3x"></i>
                                                 <h6 class="mt-2">No Backup Found</h6>

@@ -3156,87 +3156,34 @@ def admin_settings():
 @app.route('/admin/create_backup')
 @login_required
 def admin_create_backup():
+    """Redirect to simple database backup (IST)"""
     if not current_user.is_admin:
         return redirect(url_for('renter_dashboard'))
     
-    try:
-        backup_file = create_database_backup()
-        if backup_file:
-            flash(f'Database backup created successfully: {backup_file}', 'success')
-        else:
-            flash('Failed to create backup!', 'error')
-    except Exception as e:
-        flash(f'Error creating backup: {str(e)}', 'error')
+    flash('ℹ️ Please use the Ultra-Simple Database Backup system with IST timestamps!', 'info')
+    return redirect(url_for('admin_simple_db_backup'))
     
     return redirect(url_for('admin_settings'))
 
 @app.route('/admin/simple_backup', methods=['GET', 'POST'])
 @login_required
 def admin_simple_backup():
-    """Simple WhatsApp-style backup system"""
+    """Redirect to Ultra-Simple Database Backup with IST"""
     if not current_user.is_admin:
         return redirect(url_for('renter_dashboard'))
     
-    try:
-        # Import the simple backup system (now in same directory)
-        from simple_gdrive_backup import simple_backup
-        
-        if request.method == 'POST':
-            action = request.form.get('action')
-            
-            if action == 'setup_folder':
-                folder_url = request.form.get('folder_url', '').strip()
-                if folder_url:
-                    try:
-                        simple_backup.save_gdrive_folder(folder_url)
-                        flash('Google Drive folder URL saved successfully!', 'success')
-                    except Exception as e:
-                        flash(f'Error saving folder URL: {str(e)}', 'error')
-                else:
-                    flash('Please provide a valid Google Drive folder URL', 'error')
-            
-            elif action == 'create_backup':
-                try:
-                    result = simple_backup.create_backup()
-                    if result['success']:
-                        flash(f'✅ {result["message"]}', 'success')
-                    else:
-                        flash(f'❌ {result["message"]}', 'error')
-                except Exception as e:
-                    flash(f'Error creating backup: {str(e)}', 'error')
-            
-            elif action == 'restore_backup':
-                try:
-                    result = simple_backup.restore_backup()
-                    if result['success']:
-                        flash(f'✅ {result["message"]}', 'success')
-                    else:
-                        flash(f'❌ {result["message"]}', 'error')
-                except Exception as e:
-                    flash(f'Error restoring backup: {str(e)}', 'error')
-        
-        # Get backup information
-        try:
-            backup_info = simple_backup.get_backup_info()
-            folder_url = simple_backup.backup_folder_url
-        except Exception as e:
-            backup_info = {"exists": False}
-            folder_url = ""
-            print(f"Error getting backup info: {str(e)}")
-        
-        return render_template('admin_simple_backup.html', 
-                             backup_info=backup_info, 
-                             folder_url=folder_url)
-    
-    except Exception as e:
-        # If simple backup fails, show error message
-        flash('Simple backup system is temporarily unavailable. Please use JSON backup instead.', 'warning')
-        return redirect(url_for('admin_json_backup'))
+    flash('ℹ️ WhatsApp-style backup has been replaced with Ultra-Simple Database Backup with IST timestamps!', 'info')
+    return redirect(url_for('admin_simple_db_backup'))
 
 @app.route('/admin/json_backup', methods=['GET', 'POST'])
 @login_required
 def admin_json_backup():
-    """JSON file backup system - download/upload manually"""
+    """Redirect to Ultra-Simple Database Backup with IST"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    flash('ℹ️ JSON backup has been replaced with Ultra-Simple Database Backup with IST timestamps!', 'info')
+    return redirect(url_for('admin_simple_db_backup'))
     if not current_user.is_admin:
         return redirect(url_for('renter_dashboard'))
     
@@ -3420,20 +3367,12 @@ def admin_check_restore_needed():
 @app.route('/admin/download_backup')
 @login_required
 def admin_download_backup():
+    """Redirect to Ultra-Simple Database Backup with IST"""
     if not current_user.is_admin:
         return redirect(url_for('renter_dashboard'))
     
-    try:
-        backup_file = 'current_backup.json'
-        if os.path.exists(backup_file):
-            return send_file(backup_file, as_attachment=True, 
-                           download_name=f'database_backup_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
-        else:
-            flash('No backup file found! Please create a backup first.', 'error')
-            return redirect(url_for('admin_settings'))
-    except Exception as e:
-        flash(f'Error downloading backup: {str(e)}', 'error')
-        return redirect(url_for('admin_settings'))
+    flash('ℹ️ Old backup download has been replaced with Ultra-Simple Database Backup with IST timestamps!', 'info')
+    return redirect(url_for('admin_simple_db_backup'))
 
 @app.route('/admin/simple_db_backup', methods=['GET', 'POST'])
 @login_required
@@ -3466,8 +3405,10 @@ def admin_simple_db_backup():
                         flash('❌ No backup file selected!', 'error')
                     elif file and file.filename.endswith('.db'):
                         try:
-                            # Save uploaded file to simple_backups folder
-                            upload_filename = f"uploaded_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+                            # Save uploaded file to simple_backups folder with IST timestamp
+                            from datetime import datetime, timezone, timedelta
+                            IST = timezone(timedelta(hours=5, minutes=30))
+                            upload_filename = f"uploaded_backup_{datetime.now(IST).strftime('%Y%m%d_%H%M%S_IST')}.db"
                             upload_path = os.path.join(simple_db_backup.backup_folder, upload_filename)
                             file.save(upload_path)
                             
