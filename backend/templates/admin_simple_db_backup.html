@@ -61,16 +61,32 @@
                                             </button>
                                         </form>
 
-                                        <!-- Restore Button -->
-                                        <form method="POST">
-                                            <input type="hidden" name="action" value="restore_backup">
-                                            <button type="submit" class="btn btn-success btn-lg btn-block" 
-                                                    {% if not backup_info.exists %}disabled{% endif %}>
-                                                <i class="fas fa-undo"></i> 
-                                                Restore Database<br>
-                                                <small>(Instant Replace)</small>
+                                        <!-- Upload & Restore Button -->
+                                        <form method="POST" enctype="multipart/form-data" class="mb-3">
+                                            <input type="hidden" name="action" value="upload_restore">
+                                            <div class="mb-2">
+                                                <input type="file" name="backup_file" accept=".db" class="form-control" 
+                                                       required id="backupFileInput">
+                                                <small class="text-muted">Choose your latest_backup.db file</small>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning btn-lg btn-block">
+                                                <i class="fas fa-upload"></i> 
+                                                Upload & Restore<br>
+                                                <small>(Upload .db file)</small>
                                             </button>
                                         </form>
+
+                                        <!-- Quick Restore Button (if backup exists) -->
+                                        {% if backup_info.exists %}
+                                        <form method="POST">
+                                            <input type="hidden" name="action" value="restore_backup">
+                                            <button type="submit" class="btn btn-success btn-lg btn-block">
+                                                <i class="fas fa-undo"></i> 
+                                                Restore Existing Backup<br>
+                                                <small>(Use {{ backup_info.filename }})</small>
+                                            </button>
+                                        </form>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -99,9 +115,9 @@
                                     <h6 class="text-success">📤 Restore Process:</h6>
                                     <div class="bg-light p-3 rounded">
                                         <ol class="mb-0">
-                                            <li>Upload backup file to your project</li>
-                                            <li>Deploy your site</li>
-                                            <li>Come to this page</li>
+                                            <li><strong>Option 1:</strong> Click "Upload & Restore" → Choose your .db file</li>
+                                            <li><strong>Option 2:</strong> Put backup in <code>backend/simple_backups/</code> → Click "Restore Existing"</li>
+                                            <li><strong>Auto-Restore:</strong> System detects backup after deployment</li>
                                             <li>Click "Restore Database" - Done!</li>
                                         </ol>
                                     </div>

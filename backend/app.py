@@ -3443,7 +3443,8 @@ def admin_simple_db_backup():
         return redirect(url_for('renter_dashboard'))
     
     try:
-        from simple_db_backup import simple_db_backup
+        from simple_db_backup import SimpleDatabaseBackup
+        simple_db_backup = SimpleDatabaseBackup()
         
         if request.method == 'POST':
             action = request.form.get('action')
@@ -3454,6 +3455,32 @@ def admin_simple_db_backup():
                     flash(f'✅ {result["message"]}', 'success')
                 else:
                     flash(f'❌ {result["message"]}', 'error')
+            
+            elif action == 'upload_restore':
+                # Handle file upload and restore
+                if 'backup_file' not in request.files:
+                    flash('❌ No backup file selected!', 'error')
+                else:
+                    file = request.files['backup_file']
+                    if file.filename == '':
+                        flash('❌ No backup file selected!', 'error')
+                    elif file and file.filename.endswith('.db'):
+                        try:
+                            # Save uploaded file to simple_backups folder
+                            upload_filename = f"uploaded_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+                            upload_path = os.path.join(simple_db_backup.backup_folder, upload_filename)
+                            file.save(upload_path)
+                            
+                            # Now restore from the uploaded file
+                            result = simple_db_backup.restore_backup(upload_filename)
+                            if result['success']:
+                                flash(f'✅ File uploaded and restored successfully! {result["message"]}', 'success')
+                            else:
+                                flash(f'❌ Upload successful but restore failed: {result["message"]}', 'error')
+                        except Exception as e:
+                            flash(f'❌ Upload/restore failed: {str(e)}', 'error')
+                    else:
+                        flash('❌ Please select a valid .db file!', 'error')
             
             elif action == 'restore_backup':
                 backup_filename = request.form.get('backup_filename')
@@ -3483,7 +3510,8 @@ def admin_download_db_backup(filename):
         return redirect(url_for('renter_dashboard'))
     
     try:
-        from simple_db_backup import simple_db_backup
+        from simple_db_backup import SimpleDatabaseBackup
+        simple_db_backup = SimpleDatabaseBackup()
         
         backup_path = os.path.join(simple_db_backup.backup_folder, filename)
         if os.path.exists(backup_path):
@@ -4587,6 +4615,7 @@ if __name__ == '__main__':
         create_default_settings()
         
         # Check for backup restore after database initialization
+        print("🔍 Checking for backup auto-restore...")
         check_for_backup_restore()
         
     app.run(debug=True)
