@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SubmitField, DecimalField, IntegerField, SelectField, DateField
-from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange, Optional
+from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange, Optional, ValidationError
 from wtforms.widgets import TextArea
 
 class RegistrationForm(FlaskForm):
@@ -219,6 +219,17 @@ class UserProfileForm(FlaskForm):
         Email(message='Please enter a valid email address.')
     ])
     
+    # Password Change (Optional)
+    current_password = PasswordField('Current Password', validators=[Optional()])
+    new_password = PasswordField('New Password', validators=[
+        Optional(),
+        Length(min=6, message='Password must be at least 6 characters long.')
+    ])
+    confirm_password = PasswordField('Confirm New Password', validators=[
+        Optional(),
+        EqualTo('new_password', message='Passwords must match.')
+    ])
+    
     # Personal Information
     full_name = StringField('Full Name', validators=[
         Optional(),
@@ -337,6 +348,24 @@ class UserProfileForm(FlaskForm):
     ])
     
     submit = SubmitField('Update Profile')
+    
+    def validate_new_password(self, field):
+        """Custom validation for password fields"""
+        # If any password field is filled, all must be filled
+        if field.data or self.current_password.data or self.confirm_password.data:
+            if not self.current_password.data:
+                raise ValidationError('Current password is required to change password.')
+            if not field.data:
+                raise ValidationError('New password is required.')
+            if not self.confirm_password.data:
+                raise ValidationError('Password confirmation is required.')
+    
+    def validate_current_password(self, field):
+        """Custom validation for current password"""
+        # If any password field is filled, current password must be filled
+        if self.new_password.data or self.confirm_password.data:
+            if not field.data:
+                raise ValidationError('Current password is required to change password.')
 
 class DocumentUploadForm(FlaskForm):
     document_type = SelectField('Document Type', choices=[

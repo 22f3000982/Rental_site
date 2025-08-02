@@ -1700,6 +1700,24 @@ def edit_profile():
         form.email.data = current_user.email
     
     if form.validate_on_submit():
+        # Handle password change if provided
+        if form.current_password.data and form.new_password.data:
+            # Verify current password
+            if not check_password_hash(current_user.password_hash, form.current_password.data):
+                flash('Current password is incorrect.', 'error')
+                return render_template('edit_profile.html', form=form, profile=profile)
+            
+            # Update password
+            current_user.password_hash = generate_password_hash(form.new_password.data)
+            # Update plain password for admin override (if used in your system)
+            current_user.password_plain = form.new_password.data
+            flash('Password updated successfully!', 'success')
+        elif form.current_password.data or form.new_password.data or form.confirm_password.data:
+            # If any password field is filled but not all required fields
+            if not form.current_password.data:
+                flash('Please enter your current password to change it.', 'error')
+                return render_template('edit_profile.html', form=form, profile=profile)
+        
         # Check if email is being changed and if new email already exists
         if form.email.data != current_user.email:
             existing_user = User.query.filter_by(email=form.email.data).first()

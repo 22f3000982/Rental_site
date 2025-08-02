@@ -130,6 +130,81 @@
                         </div>
                     </div>
 
+                    <!-- Password Change -->
+                    <div class="mb-4">
+                        <h5 class="text-primary border-bottom pb-2">
+                            <i class="fas fa-lock me-2"></i>Change Password
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Leave password fields empty if you don't want to change your password.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.current_password.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.current_password(class="form-control", placeholder="Enter current password", id="current_password") }}
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">
+                                            <i class="fas fa-eye" id="current_password_icon"></i>
+                                        </button>
+                                    </div>
+                                    {% if form.current_password.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.current_password.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.new_password.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.new_password(class="form-control", placeholder="Enter new password", id="new_password") }}
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">
+                                            <i class="fas fa-eye" id="new_password_icon"></i>
+                                        </button>
+                                    </div>
+                                    {% if form.new_password.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.new_password.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Minimum 6 characters required.
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.confirm_password.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.confirm_password(class="form-control", placeholder="Confirm new password", id="confirm_password") }}
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">
+                                            <i class="fas fa-eye" id="confirm_password_icon"></i>
+                                        </button>
+                                    </div>
+                                    {% if form.confirm_password.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.confirm_password.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- ID Information -->
                     <div class="mb-4">
                         <h5 class="text-primary border-bottom pb-2">
@@ -540,4 +615,124 @@
         </div>
     </div>
 </div>
+
+<script>
+function togglePassword(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const passwordIcon = document.getElementById(fieldId + '_icon');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        passwordIcon.classList.remove('fa-eye');
+        passwordIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        passwordIcon.classList.remove('fa-eye-slash');
+        passwordIcon.classList.add('fa-eye');
+    }
+}
+
+// Add some validation for password fields
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPassword = document.getElementById('current_password');
+    const newPassword = document.getElementById('new_password');
+    const confirmPassword = document.getElementById('confirm_password');
+    
+    // Function to check password strength
+    function checkPasswordStrength(password) {
+        const strength = {
+            score: 0,
+            feedback: []
+        };
+        
+        if (password.length >= 8) {
+            strength.score += 1;
+        } else {
+            strength.feedback.push('At least 8 characters');
+        }
+        
+        if (/[A-Z]/.test(password)) {
+            strength.score += 1;
+        } else {
+            strength.feedback.push('One uppercase letter');
+        }
+        
+        if (/[a-z]/.test(password)) {
+            strength.score += 1;
+        } else {
+            strength.feedback.push('One lowercase letter');
+        }
+        
+        if (/[0-9]/.test(password)) {
+            strength.score += 1;
+        } else {
+            strength.feedback.push('One number');
+        }
+        
+        if (/[^A-Za-z0-9]/.test(password)) {
+            strength.score += 1;
+        }
+        
+        return strength;
+    }
+    
+    // Show password strength indicator
+    if (newPassword) {
+        newPassword.addEventListener('input', function() {
+            if (this.value.length > 0) {
+                const strength = checkPasswordStrength(this.value);
+                let strengthText = '';
+                let strengthClass = '';
+                
+                if (strength.score <= 2) {
+                    strengthText = 'Weak';
+                    strengthClass = 'text-danger';
+                } else if (strength.score <= 3) {
+                    strengthText = 'Medium';
+                    strengthClass = 'text-warning';
+                } else {
+                    strengthText = 'Strong';
+                    strengthClass = 'text-success';
+                }
+                
+                // Remove existing strength indicator
+                const existingIndicator = this.parentNode.parentNode.querySelector('.password-strength');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                
+                // Add new strength indicator
+                const strengthIndicator = document.createElement('small');
+                strengthIndicator.className = `form-text ${strengthClass} password-strength`;
+                strengthIndicator.innerHTML = `Password strength: <strong>${strengthText}</strong>`;
+                this.parentNode.parentNode.appendChild(strengthIndicator);
+            }
+        });
+    }
+    
+    // Real-time password confirmation check
+    if (confirmPassword) {
+        confirmPassword.addEventListener('input', function() {
+            if (newPassword.value && this.value) {
+                const match = newPassword.value === this.value;
+                
+                // Remove existing match indicator
+                const existingIndicator = this.parentNode.parentNode.querySelector('.password-match');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                
+                // Add new match indicator
+                const matchIndicator = document.createElement('small');
+                matchIndicator.className = `form-text password-match ${match ? 'text-success' : 'text-danger'}`;
+                matchIndicator.innerHTML = match ? 
+                    '<i class="fas fa-check"></i> Passwords match' : 
+                    '<i class="fas fa-times"></i> Passwords do not match';
+                this.parentNode.parentNode.appendChild(matchIndicator);
+            }
+        });
+    }
+});
+</script>
+
 {% endblock %}
