@@ -102,31 +102,39 @@ class JSONBackupManager:
             
             # Find JSON file to restore from
             if not json_file_path:
-                # Look for uploaded JSON files in backend folder
+                # Look for uploaded JSON files in multiple locations
                 backend_json_files = []
                 
-                # Check backend folder
-                if os.path.exists('backend'):
-                    for file in os.listdir('backend'):
-                        if file.endswith('.json') and 'backup' in file.lower():
-                            backend_json_files.append(os.path.join('backend', file))
-                
-                # Check current folder
+                # Method 1: Check current directory (when running from backend folder)
+                print(f"🔍 Checking current directory: {os.getcwd()}")
                 for file in os.listdir('.'):
-                    if file.endswith('.json') and 'backup' in file.lower():
+                    if file.endswith('.json') and ('backup' in file.lower() or 'rental_backup' in file.lower()):
                         backend_json_files.append(file)
+                        print(f"✅ Found backup file in current dir: {file}")
                 
-                # Check backup folder
+                # Method 2: Check if we're in root and look in backend folder
+                if os.path.exists('backend'):
+                    print("🔍 Checking backend folder...")
+                    for file in os.listdir('backend'):
+                        if file.endswith('.json') and ('backup' in file.lower() or 'rental_backup' in file.lower()):
+                            backend_json_files.append(os.path.join('backend', file))
+                            print(f"✅ Found backup file in backend: {file}")
+                
+                # Method 3: Check backup folder
                 backup_folder_files = []
                 if os.path.exists(self.backup_folder):
+                    print(f"🔍 Checking backup folder: {self.backup_folder}")
                     for file in os.listdir(self.backup_folder):
                         if file.endswith('.json'):
                             backup_folder_files.append(os.path.join(self.backup_folder, file))
+                            print(f"✅ Found backup file in backup folder: {file}")
                 
                 # Use most recent file
                 all_files = backend_json_files + backup_folder_files
+                print(f"📂 All backup files found: {all_files}")
+                
                 if not all_files:
-                    return {"success": False, "message": "No JSON backup files found"}
+                    return {"success": False, "message": f"No JSON backup files found. Current directory: {os.getcwd()}"}
                 
                 # Sort by modification time (most recent first)
                 all_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)

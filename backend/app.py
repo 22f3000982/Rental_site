@@ -3287,33 +3287,50 @@ def admin_debug_backup():
         # Find backup files
         backup_files = []
         
-        # Check backend folder
-        if os.path.exists('backend'):
-            for file in os.listdir('backend'):
-                if file.endswith('.json') and 'backup' in file.lower():
-                    backup_files.append(f"backend/{file}")
+        # Check current directory (most likely location on Render)
+        current_files = []
+        try:
+            for file in os.listdir('.'):
+                if file.endswith('.json') and ('backup' in file.lower() or 'rental_backup' in file.lower()):
+                    current_files.append(file)
+                    backup_files.append(file)
+        except Exception as e:
+            current_files = [f"Error: {str(e)}"]
         
-        # Check current folder
-        for file in os.listdir('.'):
-            if file.endswith('.json') and 'backup' in file.lower():
-                backup_files.append(file)
+        # Check backend folder (if running from root)
+        backend_files = []
+        if os.path.exists('backend'):
+            try:
+                for file in os.listdir('backend'):
+                    if file.endswith('.json') and ('backup' in file.lower() or 'rental_backup' in file.lower()):
+                        backend_files.append(file)
+                        backup_files.append(f"backend/{file}")
+            except Exception as e:
+                backend_files = [f"Error: {str(e)}"]
         
         debug_info = {
-            'backup_files_found': backup_files,
             'current_directory': os.getcwd(),
             'backend_exists': os.path.exists('backend'),
-            'json_backup_manager_available': True
+            'current_dir_files': current_files,
+            'backend_dir_files': backend_files,
+            'all_backup_files': backup_files,
+            'json_backup_manager_available': True,
+            'environment_vars': {
+                'RENDER': os.environ.get('RENDER', 'Not set'),
+                'PORT': os.environ.get('PORT', 'Not set')
+            }
         }
         
         # Try to read the first backup file
         if backup_files:
             try:
                 import json
-                with open(backup_files[0], 'r') as f:
+                with open(backup_files[0], 'r', encoding='utf-8') as f:
                     backup_data = json.load(f)
                 
-                debug_info['first_file_structure'] = {
+                debug_info['first_file_analysis'] = {
                     'filename': backup_files[0],
+                    'file_size': os.path.getsize(backup_files[0]),
                     'keys': list(backup_data.keys()),
                     'has_tables': 'tables' in backup_data,
                     'tables_type': type(backup_data.get('tables', None)).__name__,
@@ -3321,15 +3338,21 @@ def admin_debug_backup():
                 }
                 
                 if 'tables' in backup_data:
-                    debug_info['first_file_structure']['table_names'] = list(backup_data['tables'].keys())
+                    debug_info['first_file_analysis']['table_names'] = list(backup_data['tables'].keys())
+                    # Show first few characters of the file
+                    with open(backup_files[0], 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        debug_info['first_file_analysis']['file_preview'] = content[:500] + "..." if len(content) > 500 else content
                     
             except Exception as e:
                 debug_info['file_read_error'] = str(e)
+        else:
+            debug_info['no_files_found'] = True
         
         return jsonify(debug_info)
         
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return jsonify({'error': str(e), 'current_directory': os.getcwd()})
 
 @app.route('/admin/check_restore_needed')
 @login_required
