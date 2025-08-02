@@ -3139,15 +3139,7 @@ def admin_simple_backup():
         return redirect(url_for('renter_dashboard'))
     
     try:
-        # Import the simple backup system
-        import sys
-        import os
-        
-        # Add parent directory to path to import simple_gdrive_backup
-        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        if parent_dir not in sys.path:
-            sys.path.append(parent_dir)
-        
+        # Import the simple backup system (now in same directory)
         from simple_gdrive_backup import simple_backup
         
         if request.method == 'POST':

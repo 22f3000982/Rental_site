@@ -88,3 +88,15 @@ docs/_build/
 # Backup files
 *.bak
 *.backup
+
+# Google Drive API credentials and tokens (NEVER commit these!)
+credentials.json
+token.pickle
+
+# Additional backup files
+current_users_backup.json
+current_backup.json
+backup_*.json
+pre_deploy_backup_*.json
+live_backup.json
+merged_backup_*.json
