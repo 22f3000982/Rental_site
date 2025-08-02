@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Simple Database Backup - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">🚀 Simple Database Backup</h4>
+                    <div class="badge badge-success">Just Works!</div>
+                </div>
+                <div class="card-body">
+                    <!-- Welcome Message -->
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-rocket"></i> Ultra Simple Backup - No Complications!</h5>
+                        <ul class="mb-0">
+                            <li><strong>Create Backup:</strong> Click button → Database file copied instantly</li>
+                            <li><strong>Download:</strong> Get the backup file to save on your computer</li>
+                            <li><strong>Before Deploy:</strong> Upload the backup file to your project</li>
+                            <li><strong>Restore:</strong> Click restore → All data back instantly!</li>
+                        </ul>
+                    </div>
+
+                    <!-- Current Backup Status -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>💾 Backup Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            {% if backup_info.exists %}
+                                                <i class="fas fa-database text-success fa-3x"></i>
+                                                <h6 class="mt-2">Backup Available</h6>
+                                                <small class="text-muted">{{ backup_info.filename }}</small><br>
+                                                <small class="text-muted">{{ backup_info.size }} bytes</small><br>
+                                                <small class="text-muted">{{ backup_info.date }}</small>
+                                            {% else %}
+                                                <i class="fas fa-exclamation-triangle text-warning fa-3x"></i>
+                                                <h6 class="mt-2">No Backup Found</h6>
+                                                <small class="text-muted">Create your first backup</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="col-md-6">
+                                    <div class="d-flex flex-column h-100 justify-content-center">
+                                        <!-- Create Backup Button -->
+                                        <form method="POST" class="mb-3">
+                                            <input type="hidden" name="action" value="create_backup">
+                                            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                                                <i class="fas fa-plus"></i> 
+                                                Create Database Backup<br>
+                                                <small>(Instant Copy)</small>
+                                            </button>
+                                        </form>
+
+                                        <!-- Restore Button -->
+                                        <form method="POST">
+                                            <input type="hidden" name="action" value="restore_backup">
+                                            <button type="submit" class="btn btn-success btn-lg btn-block" 
+                                                    {% if not backup_info.exists %}disabled{% endif %}>
+                                                <i class="fas fa-undo"></i> 
+                                                Restore Database<br>
+                                                <small>(Instant Replace)</small>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- How It Works -->
+                    <div class="card mb-4 border-success">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">🎯 How This Simple System Works</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">📥 Backup Process:</h6>
+                                    <div class="bg-light p-3 rounded">
+                                        <ol class="mb-0">
+                                            <li>Click "Create Database Backup"</li>
+                                            <li>System copies your database file</li>
+                                            <li>Download the backup file</li>
+                                            <li>Save it somewhere safe</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-success">📤 Restore Process:</h6>
+                                    <div class="bg-light p-3 rounded">
+                                        <ol class="mb-0">
+                                            <li>Upload backup file to your project</li>
+                                            <li>Deploy your site</li>
+                                            <li>Come to this page</li>
+                                            <li>Click "Restore Database" - Done!</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Backups -->
+                    {% if available_backups %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>📂 Available Backup Files</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Filename</th>
+                                            <th>Size</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for backup in available_backups %}
+                                        <tr{% if backup.is_latest %} class="table-success"{% endif %}>
+                                            <td>
+                                                {{ backup.filename }}
+                                                {% if backup.is_latest %}
+                                                    <span class="badge badge-success">Latest</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ backup.size }} bytes</td>
+                                            <td>{{ backup.modified }}</td>
+                                            <td>
+                                                <a href="{{ url_for('admin_download_db_backup', filename=backup.filename) }}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-download"></i> Download
+                                                </a>
+                                                <form method="POST" class="d-inline ml-2">
+                                                    <input type="hidden" name="action" value="restore_backup">
+                                                    <input type="hidden" name="backup_filename" value="{{ backup.filename }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                                        <i class="fas fa-undo"></i> Restore
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Advantages -->
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-check-circle"></i> Why This System is Better:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="mb-0">
+                                    <li>✅ No JSON parsing issues</li>
+                                    <li>✅ No file format problems</li>
+                                    <li>✅ Works with any SQLite database</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="mb-0">
+                                    <li>✅ Instant backup (file copy)</li>
+                                    <li>✅ Instant restore (file replace)</li>
+                                    <li>✅ 100% reliable</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('admin_settings') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

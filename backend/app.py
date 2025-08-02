@@ -118,6 +118,45 @@ def create_default_settings():
         db.session.commit()
         print("Settings updated to correct values")
 
+def check_for_backup_restore():
+    """Check if there's a backup file to restore after deployment"""
+    try:
+        from simple_db_backup import SimpleDatabaseBackup
+        backup_manager = SimpleDatabaseBackup()
+        
+        # Check if there's a backup file in the simple_backups folder
+        import os
+        latest_backup_path = os.path.join("simple_backups", "latest_backup.db")
+        
+        if os.path.exists(latest_backup_path):
+            print("🔍 Found backup file for auto-restore: latest_backup.db")
+            
+            # Check if current database is empty (new deployment)
+            try:
+                from models import User
+                user_count = User.query.count()
+                if user_count <= 1:  # Only admin user exists
+                    print("🔄 Empty database detected, auto-restoring from backup...")
+                    result = backup_manager.restore_backup("latest_backup.db")
+                    if result["success"]:
+                        print(f"✅ Auto-restore successful: {result['message']}")
+                    else:
+                        print(f"❌ Auto-restore failed: {result['message']}")
+                else:
+                    print(f"🔍 Database has {user_count} users, skipping auto-restore")
+            except Exception as e:
+                print(f"🔄 Could not check user count, attempting auto-restore anyway...")
+                result = backup_manager.restore_backup("latest_backup.db")
+                if result["success"]:
+                    print(f"✅ Auto-restore successful: {result['message']}")
+                else:
+                    print(f"❌ Auto-restore failed: {result['message']}")
+        else:
+            print("📁 No backup file found for auto-restore")
+            
+    except Exception as e:
+        print(f"🔍 Backup auto-restore check failed: {e}")
+
 def calculate_electricity_bill(meter_reading):
     """Calculate electricity bill based on meter reading"""
     settings = SystemSettings.query.first()
@@ -3396,6 +3435,67 @@ def admin_download_backup():
         flash(f'Error downloading backup: {str(e)}', 'error')
         return redirect(url_for('admin_settings'))
 
+@app.route('/admin/simple_db_backup', methods=['GET', 'POST'])
+@login_required
+def admin_simple_db_backup():
+    """Ultra-simple database backup - just copy the database file"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    try:
+        from simple_db_backup import simple_db_backup
+        
+        if request.method == 'POST':
+            action = request.form.get('action')
+            
+            if action == 'create_backup':
+                result = simple_db_backup.create_backup()
+                if result['success']:
+                    flash(f'✅ {result["message"]}', 'success')
+                else:
+                    flash(f'❌ {result["message"]}', 'error')
+            
+            elif action == 'restore_backup':
+                backup_filename = request.form.get('backup_filename')
+                result = simple_db_backup.restore_backup(backup_filename)
+                if result['success']:
+                    flash(f'✅ {result["message"]}', 'success')
+                else:
+                    flash(f'❌ {result["message"]}', 'error')
+        
+        # Get backup information
+        backup_info = simple_db_backup.get_backup_info()
+        available_backups = simple_db_backup.list_backups()
+        
+        return render_template('admin_simple_db_backup.html', 
+                             backup_info=backup_info,
+                             available_backups=available_backups)
+    
+    except Exception as e:
+        flash(f'Simple DB backup system error: {str(e)}', 'error')
+        return redirect(url_for('admin_settings'))
+
+@app.route('/admin/download_db_backup/<filename>')
+@login_required
+def admin_download_db_backup(filename):
+    """Download a database backup file"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    try:
+        from simple_db_backup import simple_db_backup
+        
+        backup_path = os.path.join(simple_db_backup.backup_folder, filename)
+        if os.path.exists(backup_path):
+            return send_file(backup_path, as_attachment=True, download_name=filename)
+        else:
+            flash('Backup file not found!', 'error')
+            return redirect(url_for('admin_simple_db_backup'))
+    
+    except Exception as e:
+        flash(f'Error downloading backup: {str(e)}', 'error')
+        return redirect(url_for('admin_simple_db_backup'))
+
 @app.route('/admin/historical_data')
 @login_required
 def admin_historical_data():
@@ -4485,4 +4585,8 @@ if __name__ == '__main__':
         migrate_database()  # Run migration to add new columns
         create_admin_user()
         create_default_settings()
+        
+        # Check for backup restore after database initialization
+        check_for_backup_restore()
+        
     app.run(debug=True)

@@ -115,8 +115,56 @@
                     </div>
                 </div>
                 
-                <!-- WhatsApp-Style Simple Backup Section -->
+                <!-- Ultra-Simple Database Backup Section (RECOMMENDED) -->
                 <div class="mt-5">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-database me-2"></i>
+                                🚀 Ultra-Simple Database Backup (RECOMMENDED)
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">
+                                <strong>Most Reliable!</strong> Direct database file backup - no JSON parsing, no complex setup. 
+                                Just copy the database file and restore it. Works everywhere!
+                            </p>
+                            
+                            <div class="alert alert-success mb-3">
+                                <h6><i class="fas fa-info-circle me-2"></i>Easy 3-Step Process:</h6>
+                                <ol class="mb-1">
+                                    <li><strong>Download backup</strong> - Click the button below to create & download backup</li>
+                                    <li><strong>Upload before deploy</strong> - Put the <code>.db</code> file in <code>backend/simple_backups/</code> folder</li>
+                                    <li><strong>Restore after deploy</strong> - Come back here and click "Restore Database"</li>
+                                </ol>
+                                <small class="text-muted">
+                                    <strong>📁 File Location:</strong> Place your backup file in <code>backend/simple_backups/latest_backup.db</code><br>
+                                    <strong>🚀 Auto-Restore:</strong> System will automatically find and restore your backup!
+                                </small>
+                            </div>
+                            
+                            <div class="d-flex justify-content-center">
+                                <a href="{{ url_for('admin_simple_db_backup') }}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-database me-2"></i>
+                                    Open Database Backup
+                                    <br><small>Direct File Copying</small>
+                                </a>
+                            </div>
+                            
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    ✅ No JSON parsing issues<br>
+                                    ✅ Works on all environments<br>
+                                    ✅ Most reliable method<br>
+                                    ✅ Direct database file operations
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WhatsApp-Style Simple Backup Section -->
+                <div class="mt-4">
                     <div class="card">
                         <div class="card-header bg-success text-white">
                             <h5 class="mb-0">
