@@ -464,15 +464,17 @@ def auto_backup_before_deployment():
         
         if is_production:
             print("Production environment detected, creating automatic backup...")
-            backup_file = create_database_backup()
-            if backup_file:
-                print(f"Automatic backup created: {backup_file}")
+            with app.app_context():
+                backup_file = create_database_backup()
+                if backup_file:
+                    print(f"Automatic backup created: {backup_file}")
         
     except Exception as e:
-        print(f"Error in auto backup: {e}")
+        print(f"Error creating backup: {e}")
 
 # Call init_database when the app starts
-init_database()
+with app.app_context():
+    init_database()
 
 # Create automatic backup on startup in production
 auto_backup_before_deployment()
