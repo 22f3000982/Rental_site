@@ -17,10 +17,16 @@
                         <h5><i class="fas fa-info-circle"></i> How It Works (Manual File Method):</h5>
                         <ol>
                             <li><strong>Create Backup:</strong> Click "Create JSON Backup" → Download the file</li>
-                            <li><strong>Before Deploy:</strong> Put the JSON file in your backend folder</li>
+                            <li><strong>File Name:</strong> <code>rental_backup_YYYYMMDD_HHMMSS.json</code> (e.g., <code>rental_backup_20250802_143022.json</code>)</li>
+                            <li><strong>Before Deploy:</strong> Put the JSON file in your <code>backend/</code> folder</li>
                             <li><strong>Deploy:</strong> Push your code with the backup file</li>
                             <li><strong>Restore:</strong> Click "Restore" - All users back!</li>
                         </ol>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <strong>📁 File Path:</strong> Place your backup file at: <code>backend/rental_backup_YYYYMMDD_HHMMSS.json</code>
+                            </small>
+                        </div>
                     </div>
 
                     <!-- Step-by-Step Guide -->
@@ -35,10 +41,13 @@
                                     <ol>
                                         <li>Users register on your live site</li>
                                         <li>Click <strong>"Create JSON Backup"</strong> below</li>
-                                        <li>Download the JSON file to your computer</li>
-                                        <li>Copy the JSON file to your <code>backend/</code> folder</li>
-                                        <li>Push your code: <code>git add .</code> → <code>git commit</code> → <code>git push</code></li>
+                                        <li>Download the JSON file (e.g., <code>rental_backup_20250802_143022.json</code>)</li>
+                                        <li>Copy the JSON file to your <code>backend/</code> folder on your computer</li>
+                                        <li>Push your code: <code>git add .</code> → <code>git commit -m "Add backup"</code> → <code>git push</code></li>
                                     </ol>
+                                    <div class="alert alert-warning alert-sm mt-2">
+                                        <small><strong>⚠️ Important:</strong> Place the file directly in <code>backend/</code> folder, not in subfolders!</small>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <h6 class="text-success">🔼 After Deployment:</h6>
@@ -102,6 +111,41 @@
                                         </form>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Path Details -->
+                    <div class="card mb-4 border-info">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">📁 File Name & Path Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">📝 File Name Format:</h6>
+                                    <div class="bg-light p-3 rounded">
+                                        <code>rental_backup_YYYYMMDD_HHMMSS.json</code>
+                                    </div>
+                                    <small class="text-muted mt-2 d-block">
+                                        <strong>Example:</strong> <code>rental_backup_20250802_143022.json</code><br>
+                                        (Created on Aug 2, 2025 at 2:30:22 PM)
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-success">📂 File Path:</h6>
+                                    <div class="bg-light p-3 rounded">
+                                        <code>backend/rental_backup_YYYYMMDD_HHMMSS.json</code>
+                                    </div>
+                                    <small class="text-muted mt-2 d-block">
+                                        <strong>Important:</strong> Place directly in <code>backend/</code> folder,<br>
+                                        not in <code>backend/json_backups/</code> or other subfolders!
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="alert alert-warning mt-3">
+                                <strong>💡 Quick Tip:</strong> After downloading the backup file, copy it to your local <code>backend/</code> folder, 
+                                then run <code>git add .</code> and <code>git push</code> to include it in your deployment.
                             </div>
                         </div>
                     </div>
