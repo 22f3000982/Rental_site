@@ -3274,6 +3274,63 @@ def download_json_backup(filename):
         flash(f'Error downloading backup: {str(e)}', 'error')
         return redirect(url_for('admin_json_backup'))
 
+@app.route('/admin/debug_backup')
+@login_required
+def admin_debug_backup():
+    """Debug route to check backup file structure"""
+    if not current_user.is_admin:
+        return redirect(url_for('renter_dashboard'))
+    
+    try:
+        from json_backup_manager import json_backup_manager
+        
+        # Find backup files
+        backup_files = []
+        
+        # Check backend folder
+        if os.path.exists('backend'):
+            for file in os.listdir('backend'):
+                if file.endswith('.json') and 'backup' in file.lower():
+                    backup_files.append(f"backend/{file}")
+        
+        # Check current folder
+        for file in os.listdir('.'):
+            if file.endswith('.json') and 'backup' in file.lower():
+                backup_files.append(file)
+        
+        debug_info = {
+            'backup_files_found': backup_files,
+            'current_directory': os.getcwd(),
+            'backend_exists': os.path.exists('backend'),
+            'json_backup_manager_available': True
+        }
+        
+        # Try to read the first backup file
+        if backup_files:
+            try:
+                import json
+                with open(backup_files[0], 'r') as f:
+                    backup_data = json.load(f)
+                
+                debug_info['first_file_structure'] = {
+                    'filename': backup_files[0],
+                    'keys': list(backup_data.keys()),
+                    'has_tables': 'tables' in backup_data,
+                    'tables_type': type(backup_data.get('tables', None)).__name__,
+                    'tables_count': len(backup_data.get('tables', {})) if 'tables' in backup_data else 0
+                }
+                
+                if 'tables' in backup_data:
+                    debug_info['first_file_structure']['table_names'] = list(backup_data['tables'].keys())
+                    
+            except Exception as e:
+                debug_info['file_read_error'] = str(e)
+        
+        return jsonify(debug_info)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
 @app.route('/admin/check_restore_needed')
 @login_required
 def admin_check_restore_needed():

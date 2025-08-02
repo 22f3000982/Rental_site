@@ -136,14 +136,42 @@ class JSONBackupManager:
             if not os.path.exists(json_file_path):
                 return {"success": False, "message": f"Backup file not found: {json_file_path}"}
             
-            # Load backup data
-            with open(json_file_path, 'r') as f:
-                backup_data = json.load(f)
+            # Load backup data with error handling
+            try:
+                with open(json_file_path, 'r', encoding='utf-8') as f:
+                    backup_data = json.load(f)
+            except json.JSONDecodeError as e:
+                return {"success": False, "message": f"Invalid JSON file: {str(e)}"}
+            except Exception as e:
+                return {"success": False, "message": f"Error reading backup file: {str(e)}"}
+            
+            print(f"📄 Backup file loaded. Keys: {list(backup_data.keys())}")
+            
+            # Check if backup data has the expected structure
+            if 'tables' not in backup_data:
+                return {"success": False, "message": "Invalid backup file format: 'tables' key not found"}
+            
+            if not isinstance(backup_data['tables'], dict):
+                return {"success": False, "message": "Invalid backup file format: 'tables' is not a dictionary"}
+            
+            print(f"📊 Found tables in backup: {list(backup_data['tables'].keys())}")
             
             # Connect to database
-            db_path = os.path.join('backend', 'instance', 'billing.db')
-            if not os.path.exists(db_path):
-                db_path = os.path.join('instance', 'billing.db')
+            possible_db_paths = [
+                os.path.join('instance', 'billing.db'),  # When running from backend directory
+                os.path.join('backend', 'instance', 'billing.db'),  # When running from root directory
+            ]
+            
+            db_path = None
+            for path in possible_db_paths:
+                if os.path.exists(path):
+                    db_path = path
+                    break
+            
+            if not db_path:
+                return {"success": False, "message": f"Database not found. Checked paths: {possible_db_paths}"}
+            
+            print(f"📁 Using database: {db_path}")
             
             # Create backup of current database first
             if os.path.exists(db_path):
@@ -151,33 +179,53 @@ class JSONBackupManager:
                 shutil.copy2(db_path, backup_current)
                 print(f"💾 Current database backed up as: {backup_current}")
             
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
+            try:
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+            except Exception as e:
+                return {"success": False, "message": f"Database connection failed: {str(e)}"}
             
             restored_tables = 0
             restored_records = 0
             
             # Restore each table
-            for table_name, table_data in backup_data['tables'].items():
-                try:
-                    # Clear existing data
-                    cursor.execute(f"DELETE FROM {table_name}")
-                    
-                    if table_data['data']:
-                        # Prepare insert statement
-                        columns = table_data['columns']
-                        placeholders = ','.join(['?' for _ in columns])
-                        insert_sql = f"INSERT INTO {table_name} ({','.join(columns)}) VALUES ({placeholders})"
+            try:
+                for table_name, table_data in backup_data['tables'].items():
+                    try:
+                        print(f"🔄 Processing table: {table_name}")
                         
-                        # Insert data
-                        cursor.executemany(insert_sql, table_data['data'])
-                        restored_records += len(table_data['data'])
-                    
-                    restored_tables += 1
-                    print(f"✅ Restored table: {table_name} ({len(table_data['data'])} records)")
-                    
-                except Exception as e:
-                    print(f"⚠️ Error restoring table {table_name}: {str(e)}")
+                        # Validate table data structure
+                        if not isinstance(table_data, dict):
+                            print(f"⚠️ Skipping {table_name}: invalid data structure")
+                            continue
+                            
+                        if 'columns' not in table_data or 'data' not in table_data:
+                            print(f"⚠️ Skipping {table_name}: missing columns or data")
+                            continue
+                        
+                        # Clear existing data
+                        cursor.execute(f"DELETE FROM {table_name}")
+                        
+                        if table_data['data']:
+                            # Prepare insert statement
+                            columns = table_data['columns']
+                            placeholders = ','.join(['?' for _ in columns])
+                            insert_sql = f"INSERT INTO {table_name} ({','.join(columns)}) VALUES ({placeholders})"
+                            
+                            # Insert data
+                            cursor.executemany(insert_sql, table_data['data'])
+                            restored_records += len(table_data['data'])
+                        
+                        restored_tables += 1
+                        print(f"✅ Restored table: {table_name} ({len(table_data['data'])} records)")
+                        
+                    except Exception as e:
+                        print(f"⚠️ Error restoring table {table_name}: {str(e)}")
+                        # Continue with other tables
+                        
+            except Exception as e:
+                conn.close()
+                return {"success": False, "message": f"Error accessing backup tables: {str(e)}"}
             
             conn.commit()
             conn.close()
