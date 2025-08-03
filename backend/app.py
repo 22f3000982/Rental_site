@@ -573,7 +573,14 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        # Try to find user by username, email, or phone (case-insensitive for email and username)
+        login_identifier = form.username.data.strip()
+        user = User.query.filter(
+            (User.username.ilike(login_identifier)) |
+            (User.email.ilike(login_identifier)) |
+            (User.phone == login_identifier)
+        ).first()
+        
         if user and check_password_hash(user.password_hash, form.password.data):
             if not user.is_active:
                 flash('Your account has been deactivated. Please contact admin.', 'error')
@@ -585,12 +592,16 @@ def login():
             
             login_user(user, remember=form.remember.data)
             
+            # Update last login time
+            user.last_login = datetime.now()
+            db.session.commit()
+            
             if user.is_admin:
                 return redirect(url_for('admin_dashboard'))
             else:
                 return redirect(url_for('renter_dashboard'))
         else:
-            flash('Invalid username or password.', 'error')
+            flash('Invalid username/email/phone or password.', 'error')
     
     return render_template('login.html', form=form)
 

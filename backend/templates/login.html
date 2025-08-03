@@ -635,6 +635,26 @@
         color: rgba(255, 255, 255, 0.6);
     }
     
+    /* Form Help Text Styling */
+    .form-help-text {
+        display: block;
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: #6B7280;
+        font-style: italic;
+        opacity: 0.8;
+        line-height: 1.4;
+    }
+    
+    .form-help-text i {
+        margin-right: 0.3rem;
+        font-size: 0.8rem;
+    }
+    
+    .dark-mode .form-help-text {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
     /* Form Options Styling */
     .form-options {
         display: flex;
@@ -1194,7 +1214,7 @@
         <div class="login-form-section">
             <div class="form-header">
                 <h2 class="form-title">Welcome back </h2>
-                <p class="form-subtitle">Please sign in to your account</p>
+                <p class="form-subtitle">Sign in with your username, email, or phone number</p>
             </div>
             
             <form method="POST">
@@ -1202,7 +1222,11 @@
                 
                 <div class="form-group">
                     {{ form.username.label(class="form-label") }}
-                    {{ form.username(class="form-input", placeholder="Enter your username") }}
+                    {{ form.username(class="form-input", placeholder="Enter your username, email, or phone number") }}
+                    <small class="form-help-text">
+                        <i class="fas fa-info-circle"></i>
+                        You can login using your username, email address, or phone number
+                    </small>
                     {% if form.username.errors %}
                         <div class="error-message">
                             <i class="fas fa-exclamation-triangle"></i>
