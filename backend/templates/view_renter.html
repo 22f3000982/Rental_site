@@ -264,6 +264,7 @@
                                 <th>Amount</th>
                                 <th>Due Date</th>
                                 <th>Status</th>
+                                <th>Receipt</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -279,6 +280,18 @@
                                         <small class="d-block text-muted">{{ payment.payment_date.strftime('%d %b %Y') if payment.payment_date else '' }}</small>
                                     {% else %}
                                         <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if payment.payment_receipt %}
+                                        <a href="{{ url_for('static', filename=payment.payment_receipt) }}" 
+                                           class="btn btn-sm btn-outline-info" 
+                                           target="_blank" 
+                                           title="View Payment Screenshot">
+                                            <i class="fas fa-image"></i>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -327,7 +340,7 @@
                         <tbody>
                             {% for bill in electricity_bills %}
                             <tr>
-                                <td>{{ bill.month }}/{{ bill.year }}</td>
+                                <td>{{ calendar.month_name[bill.month] }} {{ bill.year }}</td>
                                 <td>{{ bill.units_consumed }}</td>
                                 <td>₹{{ "%.2f"|format(bill.total_amount) }}</td>
                                 <td>
@@ -488,6 +501,17 @@
 .dark-mode .btn-outline-danger:hover {
     background-color: #f87171;
     border-color: #f87171;
+    color: #1f2937;
+}
+
+.dark-mode .btn-outline-info {
+    color: #60a5fa;
+    border-color: #60a5fa;
+}
+
+.dark-mode .btn-outline-info:hover {
+    background-color: #60a5fa;
+    border-color: #60a5fa;
     color: #1f2937;
 }
 

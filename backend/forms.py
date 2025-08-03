@@ -111,6 +111,10 @@ class HistoricalRentPaymentForm(FlaskForm):
         ('bank_transfer', 'Bank Transfer')
     ], validators=[DataRequired()])
     transaction_id = StringField('Transaction ID/Reference', validators=[Optional()])
+    payment_screenshot = FileField('Payment Screenshot (Optional)', validators=[
+        Optional(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Only image files are allowed!')
+    ])
     notes = TextAreaField('Notes', validators=[Optional()])
     submit = SubmitField('Add Historical Payment')
 

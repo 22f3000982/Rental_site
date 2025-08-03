@@ -3567,6 +3567,35 @@ def admin_historical_rent_payment():
             flash(f'Rent payment for {calendar.month_name[form.month.data]} {form.year.data} already exists!', 'error')
             return render_template('admin_historical_rent_payment.html', form=form)
         
+        # Handle payment screenshot upload
+        payment_receipt_path = None
+        if form.payment_screenshot.data:
+            file = form.payment_screenshot.data
+            from werkzeug.utils import secure_filename
+            import os
+            
+            # Create uploads directory for payment receipts
+            uploads_dir = os.path.join(app.root_path, 'static', 'uploads', 'payment_receipts')
+            os.makedirs(uploads_dir, exist_ok=True)
+            
+            # Generate unique filename
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = secure_filename(f"rent_payment_{form.renter_id.data}_{form.month.data}_{form.year.data}_{timestamp}_{file.filename}")
+            file_path = os.path.join(uploads_dir, filename)
+            
+            # Check file size (5MB max for payment screenshots)
+            if hasattr(file, 'content_length') and file.content_length and file.content_length > 5 * 1024 * 1024:
+                flash('Screenshot file size too large. Maximum 5MB allowed.', 'error')
+                return render_template('admin_historical_rent_payment.html', form=form)
+            
+            try:
+                # Save file
+                file.save(file_path)
+                payment_receipt_path = f'uploads/payment_receipts/{filename}'
+            except Exception as e:
+                flash(f'Error uploading screenshot: {str(e)}', 'error')
+                return render_template('admin_historical_rent_payment.html', form=form)
+
         # Create historical rent payment
         payment = RentPayment(
             renter_id=form.renter_id.data,
@@ -3578,6 +3607,7 @@ def admin_historical_rent_payment():
             is_paid=True,
             payment_method=form.payment_method.data,
             transaction_id=form.transaction_id.data,
+            payment_receipt=payment_receipt_path,
             payment_status='approved',
             verification_date=datetime.now(),
             verified_by=current_user.id,
