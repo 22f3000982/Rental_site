@@ -1360,6 +1360,9 @@
                                     <a class="nav-link {{ 'active' if request.endpoint == 'admin_renters' }}" href="{{ url_for('admin_renters') }}">
                                         <i class="fas fa-users me-2"></i>Renters
                                     </a>
+                                    <a class="nav-link {{ 'active' if request.endpoint == 'admin_create_rent_payment' }}" href="{{ url_for('admin_create_rent_payment') }}">
+                                        <i class="fas fa-plus-circle me-2"></i>Create Rent Request
+                                    </a>
                                     <a class="nav-link {{ 'active' if request.endpoint == 'admin_profiles' }}" href="{{ url_for('admin_profiles') }}">
                                         <i class="fas fa-id-card me-2"></i>Profiles
                                     </a>

@@ -270,7 +270,7 @@
                         <tbody>
                             {% for payment in rent_payments %}
                             <tr>
-                                <td>{{ payment.month }}/{{ payment.year }}</td>
+                                <td>{{ calendar.month_name[payment.month] }} {{ payment.year }}</td>
                                 <td>₹{{ "%.2f"|format(payment.amount) }}</td>
                                 <td>{{ payment.due_date.strftime('%d %b %Y') }}</td>
                                 <td>

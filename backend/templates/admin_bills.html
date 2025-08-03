@@ -38,7 +38,7 @@
                     {% for bill in electricity_bills %}
                     <tr>
                         <td>{{ bill.renter.username }}</td>
-                        <td>{{ bill.month }}/{{ bill.year }}</td>
+                        <td>{{ calendar.month_name[bill.month] }} {{ bill.year }}</td>
                         <td>{{ bill.units_consumed }}</td>
                         <td>₹{{ bill.rate_per_unit }}</td>
                         <td>₹{{ bill.fixed_charge }}</td>
@@ -94,7 +94,7 @@
                     {% for payment in rent_payments %}
                     <tr>
                         <td>{{ payment.renter.username }}</td>
-                        <td>{{ payment.month }}/{{ payment.year }}</td>
+                        <td>{{ calendar.month_name[payment.month] }} {{ payment.year }}</td>
                         <td>₹{{ "%.2f"|format(payment.amount) }}</td>
                         <td>{{ payment.due_date.strftime('%d %b %Y') }}</td>
                         <td>

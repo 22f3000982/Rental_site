@@ -22,6 +22,7 @@ class User(UserMixin, db.Model):
     room_number = db.Column(db.String(20), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
     full_name = db.Column(db.String(100), nullable=True)
+    electricity_bill_required = db.Column(db.Boolean, default=True, nullable=False)
     
     # Profile fields
     profile_picture = db.Column(db.String(255), nullable=True)

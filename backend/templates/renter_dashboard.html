@@ -368,24 +368,28 @@
             <div class="metric-label">Rent Payments</div>
         </div>
     </div>
+    {% if current_user.electricity_bill_required %}
     <div class="col-lg-3 col-md-6">
         <div class="metric-card">
             <div class="metric-value">{{ electricity_summary.total_paid_bills if electricity_summary else 0 }}</div>
             <div class="metric-label">Electric Bills</div>
         </div>
     </div>
+    {% endif %}
     <div class="col-lg-3 col-md-6">
         <div class="metric-card">
             <div class="metric-value">₹{{ "%.0f"|format(total_due) }}</div>
             <div class="metric-label">Outstanding</div>
         </div>
     </div>
+    {% if current_user.electricity_bill_required %}
     <div class="col-lg-3 col-md-6">
         <div class="metric-card">
             <div class="metric-value">{{ "%.1f"|format(electricity_summary.total_units_paid if electricity_summary else 0) }}</div>
             <div class="metric-label">Units Paid Till</div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- Enhanced Payment Status Cards -->
@@ -451,6 +455,7 @@
     </div>
     
     <!-- Electricity Payment Status -->
+    {% if current_user.electricity_bill_required %}
     <div class="col-lg-6">
         <div class="professional-card h-100">
             <div class="status-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
@@ -507,6 +512,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- Enhanced Outstanding Payments Section -->
@@ -529,7 +535,7 @@
                         </a>
                     </div>
                     {% endif %}
-                    {% if electricity_bill and not electricity_bill.is_paid %}
+                    {% if current_user.electricity_bill_required and electricity_bill and not electricity_bill.is_paid %}
                     <div class="col-md-6">
                         <a href="{{ url_for('pay_electricity_bill', bill_id=electricity_bill.id) }}" 
                            class="premium-button w-100 text-center text-decoration-none"
@@ -685,6 +691,7 @@
     </div>
 
     <!-- Electricity Bill History Table -->
+    {% if current_user.electricity_bill_required %}
     <div class="col-lg-6">
         <div class="professional-card">
             <div class="card-header border-0 bg-transparent pb-0">
@@ -771,6 +778,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- Professional JavaScript Enhancements -->
@@ -974,6 +982,7 @@ document.head.appendChild(style);
         </div>
     </div>
     
+    {% if current_user.electricity_bill_required %}
     <div class="col-md-4">
         <div class="card stats-card">
             <div class="card-body">
@@ -997,6 +1006,7 @@ document.head.appendChild(style);
             </div>
         </div>
     </div>
+    {% endif %}
     
     <div class="col-md-4">
         <div class="card {% if total_due > 0 %}overdue-card{% else %}payment-card{% endif %}">
@@ -1058,7 +1068,7 @@ document.head.appendChild(style);
             </div>
             {% endif %}
             
-            {% if electricity_bill and not electricity_bill.is_paid %}
+            {% if current_user.electricity_bill_required and electricity_bill and not electricity_bill.is_paid %}
             <div class="col-md-6">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span>Electricity Bill</span>
@@ -1153,7 +1163,7 @@ document.head.appendChild(style);
                         <tbody>
                             {% for payment in rent_payments[:5] %}
                             <tr>
-                                <td>{{ payment.month }}/{{ payment.year }}</td>
+                                <td>{{ calendar.month_name[payment.month] }} {{ payment.year }}</td>
                                 <td>₹{{ "%.2f"|format(payment.amount) }}</td>
                                 <td>
                                     {% if payment.is_paid %}
@@ -1190,6 +1200,7 @@ document.head.appendChild(style);
         </div>
     </div>
     
+    {% if current_user.electricity_bill_required %}
     <div class="col-md-6">
         <div class="card">
             <div class="card-body">
@@ -1211,7 +1222,7 @@ document.head.appendChild(style);
                         <tbody>
                             {% for bill in electricity_bills_sorted[:5] %}
                             <tr>
-                                <td>{{ bill.month }}/{{ bill.year }}</td>
+                                <td>{{ calendar.month_name[bill.month] }} {{ bill.year }}</td>
                                 <td>{{ "%.1f"|format(bill.cumulative_units) }} units</td>
                                 <td>₹{{ "%.2f"|format(bill.total_amount) }}</td>
                                 <td>
@@ -1254,10 +1265,11 @@ document.head.appendChild(style);
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- Electricity Usage Chart -->
-{% if electricity_bills %}
+{% if current_user.electricity_bill_required and electricity_bills %}
 <div class="card mt-4">
     <div class="card-body">
         <h5 class="card-title">
@@ -1278,7 +1290,7 @@ document.head.appendChild(style);
         data: {
             labels: [
                 {% for bill in electricity_bills|reverse %}
-                    '{{ bill.month }}/{{ bill.year }}',
+                    '{{ calendar.month_name[bill.month] }} {{ bill.year }}',
                 {% endfor %}
             ],
             datasets: [{

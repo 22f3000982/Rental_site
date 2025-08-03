@@ -208,6 +208,7 @@ class EditRenterForm(FlaskForm):
         DataRequired(),
         NumberRange(min=0, message='Rent amount must be positive')
     ])
+    electricity_bill_required = BooleanField('Electricity Bill Required')
     is_active = BooleanField('Active Status')
     is_approved = BooleanField('Approved Status')
     submit = SubmitField('Update Renter')
@@ -411,3 +412,22 @@ class ProfilePictureForm(FlaskForm):
     ])
     
     submit = SubmitField('Upload Profile Picture')
+
+class CreateRentPaymentForm(FlaskForm):
+    renter_id = SelectField('Renter', coerce=int, validators=[DataRequired()])
+    amount = DecimalField('Rent Amount', validators=[
+        DataRequired(),
+        NumberRange(min=0, message='Amount must be positive')
+    ])
+    month = SelectField('Month', coerce=int, validators=[DataRequired()], choices=[
+        (1, 'January'), (2, 'February'), (3, 'March'), (4, 'April'),
+        (5, 'May'), (6, 'June'), (7, 'July'), (8, 'August'),
+        (9, 'September'), (10, 'October'), (11, 'November'), (12, 'December')
+    ])
+    year = IntegerField('Year', validators=[
+        DataRequired(),
+        NumberRange(min=2020, max=2030, message='Year must be between 2020 and 2030')
+    ])
+    due_date = DateField('Due Date', validators=[DataRequired()])
+    notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('Create Rent Payment Request')

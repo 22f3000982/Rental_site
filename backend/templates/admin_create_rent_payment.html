@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Create Rent Payment Request{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Create Rent Payment Request
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> This feature is particularly useful for creating rent payment requests for tenants who don't require electricity bills (like godown renters with their own meters).
+                    </div>
+
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.renter_id.label(class="form-label") }}
+                                    {{ form.renter_id(class="form-select") }}
+                                    {% if form.renter_id.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.renter_id.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.amount.label(class="form-label") }}
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        {{ form.amount(class="form-control", placeholder="Leave empty to use renter's default amount") }}
+                                    </div>
+                                    {% if form.amount.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.amount.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Leave empty to use the renter's default rent amount
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.month.label(class="form-label") }}
+                                    {{ form.month(class="form-select") }}
+                                    {% if form.month.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.month.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.year.label(class="form-label") }}
+                                    {{ form.year(class="form-control") }}
+                                    {% if form.year.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.year.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.due_date.label(class="form-label") }}
+                                    {{ form.due_date(class="form-control") }}
+                                    {% if form.due_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.due_date.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows="3", placeholder="Optional notes for the renter (will be included in notification)") }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.notes.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin_renters') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Renters
+                            </a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Recent Rent Payment Requests -->
+            {% if recent_requests %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Rent Payment Requests
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Renter</th>
+                                    <th>Period</th>
+                                    <th>Amount</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in recent_requests %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ request.renter.username }}</strong><br>
+                                        <small class="text-muted">Room {{ request.renter.room_number }}</small>
+                                    </td>
+                                    <td>{{ calendar.month_name[request.month] }} {{ request.year }}</td>
+                                    <td>₹{{ "%.2f"|format(request.amount) }}</td>
+                                    <td>{{ request.due_date.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        {% if request.is_paid %}
+                                            <span class="badge bg-success">Paid</span>
+                                        {% elif request.payment_status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Unpaid</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ request.created_at.strftime('%d %b %Y') if request.created_at else 'N/A' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-populate rent amount when renter is selected
+    const renterSelect = document.getElementById('renter_id');
+    const amountInput = document.getElementById('amount');
+    
+    // Store renter data (you'll need to pass this from the backend)
+    const renterData = {};
+    
+    renterSelect.addEventListener('change', function() {
+        const renterId = this.value;
+        if (renterId && renterData[renterId]) {
+            if (!amountInput.value) {
+                amountInput.value = renterData[renterId].rent_amount;
+            }
+        }
+    });
+    
+    // Auto-update due date when month/year changes
+    const monthSelect = document.getElementById('month');
+    const yearInput = document.getElementById('year');
+    const dueDateInput = document.getElementById('due_date');
+    
+    function updateDueDate() {
+        const month = parseInt(monthSelect.value);
+        const year = parseInt(yearInput.value);
+        
+        if (month && year) {
+            // Set due date to 5th of the selected month
+            const dueDate = new Date(year, month - 1, 5);
+            dueDateInput.value = dueDate.toISOString().split('T')[0];
+        }
+    }
+    
+    monthSelect.addEventListener('change', updateDueDate);
+    yearInput.addEventListener('change', updateDueDate);
+});
+</script>
+{% endblock %}

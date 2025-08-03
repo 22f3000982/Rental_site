@@ -8,6 +8,11 @@
         <i class="fas fa-users me-2"></i>
         Manage Renters
     </h2>
+    <div>
+        <a href="{{ url_for('admin_create_rent_payment') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Create Rent Request
+        </a>
+    </div>
 </div>
 
 <!-- Pending Approvals -->
@@ -111,6 +116,9 @@
                         </td>
                         <td>
                             <span class="badge bg-primary">{{ renter.room_number }}</span>
+                            {% if not renter.electricity_bill_required %}
+                            <br><small class="badge bg-info mt-1">No Electricity</small>
+                            {% endif %}
                         </td>
                         <td>{{ renter.phone }}</td>
                         <td>₹{{ "%.2f"|format(renter.rent_amount) }}</td>
@@ -132,6 +140,13 @@
                                    title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                {% if not renter.electricity_bill_required %}
+                                <a href="{{ url_for('admin_create_rent_payment') }}?renter_id={{ renter.id }}" 
+                                   class="btn btn-sm btn-outline-success" 
+                                   title="Create Rent Request">
+                                    <i class="fas fa-plus-circle"></i>
+                                </a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

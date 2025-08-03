@@ -135,6 +135,27 @@
                         </div>
                     </div>
                     
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    {{ form.electricity_bill_required(class="form-check-input") }}
+                                    {{ form.electricity_bill_required.label(class="form-check-label") }}
+                                </div>
+                                {% if form.electricity_bill_required.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.electricity_bill_required.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Uncheck if this renter does not require an electricity bill.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="text-center">
                         {{ form.submit(class="btn btn-primary btn-lg") }}
                         <a href="{{ url_for('admin_renters') }}" class="btn btn-secondary btn-lg ms-2">

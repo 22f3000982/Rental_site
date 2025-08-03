@@ -52,7 +52,9 @@
                                 <label for="payment_type" class="form-label">Payment Type</label>
                                 <select name="payment_type" id="payment_type" class="form-select">
                                     <option value="">All Types</option>
+                                    {% if current_user.electricity_bill_required %}
                                     <option value="electricity" {% if selected_type == 'electricity' %}selected{% endif %}>Electricity</option>
+                                    {% endif %}
                                     <option value="rent" {% if selected_type == 'rent' %}selected{% endif %}>Rent</option>
                                 </select>
                             </div>
